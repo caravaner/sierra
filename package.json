@@ -1,0 +1,17 @@
+{
+  "name": "sierra",
+  "private": true,
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "db:generate": "pnpm --filter @sierra/db generate",
+    "db:push": "pnpm --filter @sierra/db push",
+    "db:seed": "pnpm --filter @sierra/db seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

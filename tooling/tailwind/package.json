@@ -1,0 +1,8 @@
+{
+  "name": "@sierra/tailwind-config",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
