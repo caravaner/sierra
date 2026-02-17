@@ -1,17 +1,19 @@
 import { z } from "zod";
-import { InventoryService } from "@sierra/domain";
+import { ReplenishStockCommand } from "@sierra/domain";
 import { paginationSchema } from "@sierra/shared";
 import { router, adminProcedure, publicProcedure } from "../trpc";
 import { PrismaInventoryRepository } from "../repositories/inventory.repository.prisma";
+import { runCommand } from "../commands/run-command";
+import { toPrincipal } from "../commands/to-principal";
 
 export const inventoryRouter = router({
   checkAvailability: publicProcedure
     .input(z.object({ productId: z.string(), quantity: z.number().int().positive() }))
     .query(async ({ ctx, input }) => {
       const repo = new PrismaInventoryRepository(ctx.prisma);
-      const service = new InventoryService(repo);
-      const available = await service.checkAvailability(input.productId, input.quantity);
-      return { available };
+      const item = await repo.findByProductId(input.productId);
+      if (!item) return { available: false };
+      return { available: item.quantityAvailable >= input.quantity };
     }),
 
   list: adminProcedure
@@ -39,9 +41,13 @@ export const inventoryRouter = router({
   replenish: adminProcedure
     .input(z.object({ productId: z.string(), quantity: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      const repo = new PrismaInventoryRepository(ctx.prisma);
-      const service = new InventoryService(repo);
-      await service.replenishStock(input.productId, input.quantity);
-      return { success: true };
+      const principal = toPrincipal(ctx.session);
+      return runCommand(
+        ctx.prisma,
+        principal,
+        (uow, { inventoryRepo }) =>
+          new ReplenishStockCommand(uow, inventoryRepo),
+        input,
+      );
     }),
 });

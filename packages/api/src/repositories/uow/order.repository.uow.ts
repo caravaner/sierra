@@ -5,10 +5,15 @@ import {
   ShippingAddress,
   AttributeBag,
   type OrderRepository,
+  type UowRepository,
 } from "@sierra/domain";
+import type { PrismaUnitOfWork } from "../../uow/unit-of-work";
 
-export class PrismaOrderRepository implements OrderRepository {
-  constructor(private prisma: PrismaClient) {}
+export class UowOrderRepository implements OrderRepository, UowRepository<Order> {
+  constructor(
+    private prisma: PrismaClient,
+    private uow: PrismaUnitOfWork,
+  ) {}
 
   async findById(id: string): Promise<Order | null> {
     const row = await this.prisma.order.findUnique({
@@ -56,7 +61,17 @@ export class PrismaOrderRepository implements OrderRepository {
   }
 
   async save(entity: Order): Promise<Order> {
-    const row = await this.prisma.order.upsert({
+    this.uow.track(entity, this);
+    return entity;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.order.delete({ where: { id } });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async saveWithTx(tx: any, entity: Order): Promise<Order> {
+    const row = await tx.order.upsert({
       where: { id: entity.id },
       create: {
         id: entity.id,
@@ -86,10 +101,6 @@ export class PrismaOrderRepository implements OrderRepository {
       include: { items: true },
     });
     return this.toDomain(row);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.order.delete({ where: { id } });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextMiddleware } from "next/server";
 
 const middleware: NextMiddleware = auth((req) => {
-  if (!req.auth) {
+  if (!req.auth?.user) {
     const signInUrl = new URL("/auth/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(signInUrl);
@@ -19,5 +19,5 @@ const middleware: NextMiddleware = auth((req) => {
 export default middleware;
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|auth|_next/static|_next/image|favicon.ico).*)"],
 };

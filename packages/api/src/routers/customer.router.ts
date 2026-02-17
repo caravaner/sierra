@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { CustomerService } from "@sierra/domain";
+import { SyncCustomerCommand } from "@sierra/domain";
 import { paginationSchema } from "@sierra/shared";
 import { router, protectedProcedure, adminProcedure } from "../trpc";
 import { PrismaCustomerRepository } from "../repositories/customer.repository.prisma";
+import { runCommand } from "../commands/run-command";
+import { toPrincipal } from "../commands/to-principal";
 
 export const customerRouter = router({
   me: protectedProcedure.query(async ({ ctx }) => {
@@ -28,13 +30,14 @@ export const customerRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const repo = new PrismaCustomerRepository(ctx.prisma);
-      const service = new CustomerService(repo);
-      const customer = await service.syncUser({
-        userId: ctx.session.user.id,
-        ...input,
-      });
-      return { id: customer.id };
+      const principal = toPrincipal(ctx.session);
+      return runCommand(
+        ctx.prisma,
+        principal,
+        (uow, { customerRepo }) =>
+          new SyncCustomerCommand(uow, customerRepo),
+        { userId: ctx.session.user.id, ...input },
+      );
     }),
 
   // Admin routes

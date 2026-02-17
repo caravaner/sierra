@@ -1,8 +1,17 @@
 import type { PrismaClient } from "@sierra/db";
-import { Product, AttributeBag, type ProductRepository } from "@sierra/domain";
+import {
+  Product,
+  AttributeBag,
+  type ProductRepository,
+  type UowRepository,
+} from "@sierra/domain";
+import type { PrismaUnitOfWork } from "../../uow/unit-of-work";
 
-export class PrismaProductRepository implements ProductRepository {
-  constructor(private prisma: PrismaClient) {}
+export class UowProductRepository implements ProductRepository, UowRepository<Product> {
+  constructor(
+    private prisma: PrismaClient,
+    private uow: PrismaUnitOfWork,
+  ) {}
 
   async findById(id: string): Promise<Product | null> {
     const row = await this.prisma.product.findUnique({ where: { id } });
@@ -44,7 +53,17 @@ export class PrismaProductRepository implements ProductRepository {
   }
 
   async save(entity: Product): Promise<Product> {
-    const row = await this.prisma.product.upsert({
+    this.uow.track(entity, this);
+    return entity;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.product.delete({ where: { id } });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async saveWithTx(tx: any, entity: Product): Promise<Product> {
+    const row = await tx.product.upsert({
       where: { id: entity.id },
       create: {
         id: entity.id,
@@ -68,10 +87,6 @@ export class PrismaProductRepository implements ProductRepository {
       },
     });
     return this.toDomain(row);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.product.delete({ where: { id } });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

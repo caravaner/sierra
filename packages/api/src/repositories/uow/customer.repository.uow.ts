@@ -1,8 +1,17 @@
 import type { PrismaClient } from "@sierra/db";
-import { Customer, AttributeBag, type CustomerRepository } from "@sierra/domain";
+import {
+  Customer,
+  AttributeBag,
+  type CustomerRepository,
+  type UowRepository,
+} from "@sierra/domain";
+import type { PrismaUnitOfWork } from "../../uow/unit-of-work";
 
-export class PrismaCustomerRepository implements CustomerRepository {
-  constructor(private prisma: PrismaClient) {}
+export class UowCustomerRepository implements CustomerRepository, UowRepository<Customer> {
+  constructor(
+    private prisma: PrismaClient,
+    private uow: PrismaUnitOfWork,
+  ) {}
 
   async findById(id: string): Promise<Customer | null> {
     const row = await this.prisma.customer.findUnique({
@@ -46,7 +55,17 @@ export class PrismaCustomerRepository implements CustomerRepository {
   }
 
   async save(entity: Customer): Promise<Customer> {
-    const row = await this.prisma.customer.upsert({
+    this.uow.track(entity, this);
+    return entity;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.customer.delete({ where: { id } });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async saveWithTx(tx: any, entity: Customer): Promise<Customer> {
+    const row = await tx.customer.upsert({
       where: { id: entity.id },
       create: {
         id: entity.id,
@@ -76,10 +95,6 @@ export class PrismaCustomerRepository implements CustomerRepository {
       include: { addresses: true },
     });
     return this.toDomain(row);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.prisma.customer.delete({ where: { id } });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,0 +1,11 @@
+CREATE INDEX IF NOT EXISTS idx_users_attributes ON users USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_accounts_attributes ON accounts USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_sessions_attributes ON sessions USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_verification_tokens_attributes ON verification_tokens USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_customers_attributes ON customers USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_addresses_attributes ON addresses USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_products_attributes ON products USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_inventory_items_attributes ON inventory_items USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_orders_attributes ON orders USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_order_items_attributes ON order_items USING GIN (attributes);
+CREATE INDEX IF NOT EXISTS idx_domain_events_attributes ON domain_events USING GIN (attributes);

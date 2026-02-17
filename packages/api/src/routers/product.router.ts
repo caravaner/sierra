@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { ProductService } from "@sierra/domain";
+import {
+  CreateProductCommand,
+  UpdateProductCommand,
+} from "@sierra/domain";
 import {
   createProductSchema,
   updateProductSchema,
@@ -7,6 +10,8 @@ import {
 } from "@sierra/shared";
 import { router, publicProcedure, adminProcedure } from "../trpc";
 import { PrismaProductRepository } from "../repositories/product.repository.prisma";
+import { runCommand } from "../commands/run-command";
+import { toPrincipal } from "../commands/to-principal";
 
 export const productRouter = router({
   list: publicProcedure.input(productFilterSchema).query(async ({ ctx, input }) => {
@@ -51,32 +56,44 @@ export const productRouter = router({
   }),
 
   create: adminProcedure.input(createProductSchema).mutation(async ({ ctx, input }) => {
-    const repo = new PrismaProductRepository(ctx.prisma);
-    const service = new ProductService(repo);
-    const product = await service.createProduct(input);
-    return { id: product.id };
+    const principal = toPrincipal(ctx.session);
+    return runCommand(
+      ctx.prisma,
+      principal,
+      (uow, { productRepo }) =>
+        new CreateProductCommand(uow, productRepo),
+      input,
+    );
   }),
 
   update: adminProcedure
     .input(z.object({ id: z.string(), data: updateProductSchema }))
     .mutation(async ({ ctx, input }) => {
-      const repo = new PrismaProductRepository(ctx.prisma);
-      const service = new ProductService(repo);
-      const product = await service.updateProduct(input.id, input.data);
-      return { id: product.id };
+      const principal = toPrincipal(ctx.session);
+      return runCommand(
+        ctx.prisma,
+        principal,
+        (uow, { productRepo }) =>
+          new UpdateProductCommand(uow, productRepo),
+        { productId: input.id, data: input.data },
+      );
     }),
 
   activate: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const principal = toPrincipal(ctx.session);
     const repo = new PrismaProductRepository(ctx.prisma);
-    const service = new ProductService(repo);
-    await service.activateProduct(input.id);
+    const product = await repo.findById(input.id);
+    if (!product) throw new Error("Product not found");
+    await repo.save(product.activate(principal.id));
     return { success: true };
   }),
 
   deactivate: adminProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const principal = toPrincipal(ctx.session);
     const repo = new PrismaProductRepository(ctx.prisma);
-    const service = new ProductService(repo);
-    await service.deactivateProduct(input.id);
+    const product = await repo.findById(input.id);
+    if (!product) throw new Error("Product not found");
+    await repo.save(product.deactivate(principal.id));
     return { success: true };
   }),
 });

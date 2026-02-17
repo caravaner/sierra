@@ -2,6 +2,12 @@
 export { Entity } from "./shared/entity.base";
 export { ValueObject } from "./shared/value-object.base";
 export { DomainEvent } from "./shared/domain-event.base";
+export { AggregateRoot } from "./shared/aggregate-root.base";
+export { Command } from "./shared/command.base";
+export { AttributeBag, Attribute, attribute } from "./shared/attribute-bag";
+export type { AttributeType, Mapper } from "./shared/attribute-bag";
+export type { Principal } from "./shared/principal";
+export type { UnitOfWork, CommandMeta, UowRepository } from "./shared/unit-of-work";
 export type { Repository } from "./shared/repository.interface";
 
 // Order
@@ -14,24 +20,33 @@ export {
 } from "./order/order.value-objects";
 export type { OrderStatusType, OrderItemProps, ShippingAddressProps } from "./order/order.value-objects";
 export type { OrderRepository } from "./order/order.repository";
-export { OrderService } from "./order/order.service";
-export type { PlaceOrderInput } from "./order/order.service";
+export { OrderPlacedEvent, OrderStatusChangedEvent, OrderCancelledEvent } from "./order/order.events";
+export { PlaceOrderCommand } from "./order/commands/place-order.command";
+export type { PlaceOrderParams } from "./order/commands/place-order.command";
+export { CancelOrderCommand } from "./order/commands/cancel-order.command";
+export { UpdateOrderStatusCommand } from "./order/commands/update-order-status.command";
 
 // Product
 export { Product } from "./product/product.entity";
 export { Money, SKU } from "./product/product.value-objects";
 export type { ProductRepository } from "./product/product.repository";
-export { ProductService } from "./product/product.service";
-export type { CreateProductInput, UpdateProductInput } from "./product/product.service";
+export { ProductCreatedEvent, ProductUpdatedEvent, ProductActivatedEvent, ProductDeactivatedEvent } from "./product/product.events";
+export { CreateProductCommand } from "./product/commands/create-product.command";
+export type { CreateProductParams } from "./product/commands/create-product.command";
+export { UpdateProductCommand } from "./product/commands/update-product.command";
+export type { UpdateProductParams } from "./product/commands/update-product.command";
 
 // Inventory
 export { InventoryItem } from "./inventory/inventory.entity";
 export type { InventoryRepository } from "./inventory/inventory.repository";
-export { InventoryService } from "./inventory/inventory.service";
+export { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent } from "./inventory/inventory.events";
+export { ReplenishStockCommand } from "./inventory/commands/replenish-stock.command";
+export type { ReplenishStockParams } from "./inventory/commands/replenish-stock.command";
 
 // Customer
 export { Customer } from "./customer/customer.entity";
 export type { CustomerAddress } from "./customer/customer.entity";
 export type { CustomerRepository } from "./customer/customer.repository";
-export { CustomerService } from "./customer/customer.service";
-export type { SyncUserInput } from "./customer/customer.service";
+export { CustomerCreatedEvent, CustomerProfileUpdatedEvent, CustomerAddressAddedEvent } from "./customer/customer.events";
+export { SyncCustomerCommand } from "./customer/commands/sync-customer.command";
+export type { SyncCustomerParams } from "./customer/commands/sync-customer.command";

@@ -1,9 +1,26 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("Seeding database...");
+
+  // Create superuser
+  const hashedPassword = await bcrypt.hash("Password1$", 12);
+  await prisma.user.upsert({
+    where: { email: "superuser@sierra.local" },
+    update: {},
+    create: {
+      name: "superuser",
+      email: "superuser@sierra.local",
+      hashedPassword,
+      role: "ADMIN",
+    },
+  });
+  console.log("Seeded superuser (superuser@sierra.local).");
 
   // Create products
   const products = await Promise.all([
@@ -89,6 +106,25 @@ async function main() {
   }
 
   console.log(`Seeded ${products.length} products with inventory.`);
+
+  // Apply GIN indexes for JSONB attributes columns
+  try {
+    const ginSql = readFileSync(
+      join(__dirname, "migrations", "gin-indexes.sql"),
+      "utf-8",
+    );
+    const statements = ginSql
+      .split(";")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    for (const stmt of statements) {
+      await prisma.$executeRawUnsafe(stmt);
+    }
+    console.log("Applied GIN indexes on attributes columns.");
+  } catch (err) {
+    console.warn("Warning: Could not apply GIN indexes:", err);
+  }
 }
 
 main()

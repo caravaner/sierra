@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { OrderService, InventoryService } from "@sierra/domain";
+import {
+  PlaceOrderCommand,
+  CancelOrderCommand,
+  UpdateOrderStatusCommand,
+} from "@sierra/domain";
 import {
   placeOrderSchema,
   updateOrderStatusSchema,
@@ -7,8 +11,9 @@ import {
 } from "@sierra/shared";
 import { router, protectedProcedure, adminProcedure } from "../trpc";
 import { PrismaOrderRepository } from "../repositories/order.repository.prisma";
-import { PrismaInventoryRepository } from "../repositories/inventory.repository.prisma";
 import { PrismaCustomerRepository } from "../repositories/customer.repository.prisma";
+import { runCommand } from "../commands/run-command";
+import { toPrincipal } from "../commands/to-principal";
 
 export const orderRouter = router({
   myOrders: protectedProcedure.query(async ({ ctx }) => {
@@ -36,32 +41,29 @@ export const orderRouter = router({
   }),
 
   place: protectedProcedure.input(placeOrderSchema).mutation(async ({ ctx, input }) => {
+    const principal = toPrincipal(ctx.session);
     const customerRepo = new PrismaCustomerRepository(ctx.prisma);
-    const customer = await customerRepo.findByUserId(ctx.session.user.id);
+    const customer = await customerRepo.findByUserId(principal.id);
     if (!customer) throw new Error("Customer not found. Please complete your profile.");
 
-    const orderRepo = new PrismaOrderRepository(ctx.prisma);
-    const inventoryRepo = new PrismaInventoryRepository(ctx.prisma);
-    const inventoryService = new InventoryService(inventoryRepo);
-    const orderService = new OrderService(orderRepo, inventoryService);
-
-    const order = await orderService.placeOrder({
-      customerId: customer.id,
-      items: input.items,
-      shippingAddress: input.shippingAddress,
-    });
-
-    return { id: order.id };
+    return runCommand(
+      ctx.prisma,
+      principal,
+      (uow, { orderRepo, inventoryRepo }) =>
+        new PlaceOrderCommand(uow, orderRepo, inventoryRepo),
+      { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress },
+    );
   }),
 
   cancel: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
-    const orderRepo = new PrismaOrderRepository(ctx.prisma);
-    const inventoryRepo = new PrismaInventoryRepository(ctx.prisma);
-    const inventoryService = new InventoryService(inventoryRepo);
-    const orderService = new OrderService(orderRepo, inventoryService);
-
-    await orderService.cancelOrder(input.id);
-    return { success: true };
+    const principal = toPrincipal(ctx.session);
+    return runCommand(
+      ctx.prisma,
+      principal,
+      (uow, { orderRepo, inventoryRepo }) =>
+        new CancelOrderCommand(uow, orderRepo, inventoryRepo),
+      { orderId: input.id },
+    );
   }),
 
   // Admin routes
@@ -87,12 +89,13 @@ export const orderRouter = router({
   updateStatus: adminProcedure
     .input(z.object({ id: z.string(), ...updateOrderStatusSchema.shape }))
     .mutation(async ({ ctx, input }) => {
-      const orderRepo = new PrismaOrderRepository(ctx.prisma);
-      const inventoryRepo = new PrismaInventoryRepository(ctx.prisma);
-      const inventoryService = new InventoryService(inventoryRepo);
-      const orderService = new OrderService(orderRepo, inventoryService);
-
-      await orderService.updateOrderStatus(input.id, input.status);
-      return { success: true };
+      const principal = toPrincipal(ctx.session);
+      return runCommand(
+        ctx.prisma,
+        principal,
+        (uow, { orderRepo }) =>
+          new UpdateOrderStatusCommand(uow, orderRepo),
+        { orderId: input.id, status: input.status },
+      );
     }),
 });
