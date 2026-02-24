@@ -3,6 +3,10 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
@@ -17,11 +21,7 @@ export default function SignInPage() {
     setError("");
     setLoading(true);
 
-    const result = await signIn("credentials", {
-      login,
-      password,
-      redirect: false,
-    });
+    const result = await signIn("credentials", { login, password, redirect: false });
 
     if (result?.error) {
       setError("Invalid credentials");
@@ -33,59 +33,45 @@ export default function SignInPage() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="rounded-lg border bg-white p-8 shadow-sm">
-        <h1 className="mb-6 text-center text-xl font-bold">Sierra Admin</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
+      <Card>
+        <CardHeader className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sierra</p>
+          <CardTitle className="text-xl">Admin Portal</CardTitle>
+          <CardDescription>Sign in to access the dashboard</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="login">Email or Username</Label>
+              <Input
+                id="login"
+                type="text"
+                value={login}
+                onChange={(e) => setLogin(e.target.value)}
+                required
+                autoComplete="username"
+              />
             </div>
-          )}
-
-          <div>
-            <label
-              htmlFor="login"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Email or Username
-            </label>
-            <input
-              id="login"
-              type="text"
-              value={login}
-              onChange={(e) => setLogin(e.target.value)}
-              required
-              className="w-full rounded-md border px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full rounded-md border px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-        </form>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

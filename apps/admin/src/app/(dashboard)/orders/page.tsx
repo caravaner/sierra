@@ -2,73 +2,70 @@
 
 import { trpc } from "@/lib/trpc";
 import { formatCurrency, formatDate } from "@sierra/shared";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+function statusVariant(status: string) {
+  switch (status.toLowerCase()) {
+    case "delivered": return "success" as const;
+    case "shipped": return "secondary" as const;
+    case "cancelled": return "destructive" as const;
+    default: return "outline" as const;
+  }
+}
 
 export default function OrdersPage() {
-  const { data, isLoading } = trpc.order.list.useQuery({
-    limit: 50,
-    offset: 0,
-  });
-
-  if (isLoading) {
-    return <p className="text-gray-500">Loading orders...</p>;
-  }
+  const { data, isLoading } = trpc.order.list.useQuery({ limit: 50, offset: 0 });
 
   return (
     <div>
-      <h1 className="mb-8 text-2xl font-bold">Order Management</h1>
-      <div className="overflow-hidden rounded-lg border bg-white">
-        <table className="min-w-full divide-y">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                Order ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                Customer
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                Total
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">
-                Date
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {data?.items.map((order) => (
-              <tr key={order.id} className="hover:bg-gray-50">
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  {order.id.slice(0, 8)}...
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {order.customerId.slice(0, 8)}...
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm">
-                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">
-                    {order.status}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium">
-                  {formatCurrency(Number(order.totalAmount))}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                  {formatDate(new Date(order.createdAt))}
-                </td>
-              </tr>
-            ))}
-            {data?.items.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                  No orders found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
+        <p className="text-muted-foreground">Manage and track customer orders</p>
       </div>
+
+      <Card>
+        {isLoading ? (
+          <p className="p-8 text-center text-muted-foreground">Loading orders...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data?.items.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-mono font-medium">
+                    #{order.id.slice(0, 8).toUpperCase()}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {order.customerId.slice(0, 8)}…
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(order.status)}>{order.status}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium">{formatCurrency(Number(order.totalAmount))}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(new Date(order.createdAt))}</TableCell>
+                </TableRow>
+              ))}
+              {data?.items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    No orders found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
     </div>
   );
 }

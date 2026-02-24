@@ -1,36 +1,47 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import { trpc } from "@/lib/trpc";
+import { notFound } from "next/navigation";
+import { api } from "@/lib/api";
 import { formatCurrency } from "@sierra/shared";
+import { AddToCartButton } from "./add-to-cart-button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
-export default function ProductDetailPage() {
-  const params = useParams<{ id: string }>();
-  const { data: product, isLoading } = trpc.product.byId.useQuery({
-    id: params.id,
-  });
-
-  if (isLoading) {
-    return <p className="py-10 text-center text-gray-500">Loading...</p>;
-  }
+export default async function ProductDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const caller = await api();
+  const product = await caller.product.byId({ id: params.id });
 
   if (!product) {
-    return <p className="py-10 text-center text-gray-500">Product not found.</p>;
+    notFound();
   }
 
   return (
-    <div className="grid gap-10 md:grid-cols-2">
-      <div className="aspect-square rounded-lg bg-gray-100" />
-      <div>
-        <h1 className="text-3xl font-bold">{product.name}</h1>
-        <p className="mt-1 text-sm text-gray-500">{product.category}</p>
-        <p className="mt-4 text-2xl font-bold">
-          {formatCurrency(product.price)}
-        </p>
-        <p className="mt-4 text-gray-700">{product.description}</p>
-        <button className="mt-8 rounded-lg bg-black px-8 py-3 font-semibold text-white hover:bg-gray-800">
-          Add to Cart
-        </button>
+    <div className="grid gap-12 md:grid-cols-2">
+      <div className="overflow-hidden rounded-xl bg-muted">
+        <img
+          src={product.images[0] ?? "/images/placeholder.svg"}
+          alt={product.name}
+          className="aspect-square w-full object-cover"
+        />
+      </div>
+
+      <div className="flex flex-col">
+        <Badge variant="secondary" className="mb-3 w-fit">{product.category}</Badge>
+        <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
+        <p className="mt-4 text-3xl font-bold">{formatCurrency(product.price)}</p>
+
+        <Separator className="my-6" />
+
+        <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+
+        <AddToCartButton
+          productId={product.id}
+          name={product.name}
+          price={Number(product.price)}
+          image={product.images[0] ?? null}
+        />
       </div>
     </div>
   );

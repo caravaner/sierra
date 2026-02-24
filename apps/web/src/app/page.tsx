@@ -1,47 +1,47 @@
-"use client";
-
-import { trpc } from "@/lib/trpc";
+import { api } from "@/lib/api";
 import { formatCurrency } from "@sierra/shared";
+import { Badge } from "@/components/ui/badge";
 
-export default function HomePage() {
-  const { data, isLoading } = trpc.product.list.useQuery({
-    limit: 20,
-    offset: 0,
-  });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-gray-500">Loading products...</p>
-      </div>
-    );
-  }
+export default async function HomePage() {
+  const caller = await api();
+  const data = await caller.product.list({ limit: 20, offset: 0 });
 
   return (
     <div>
-      <h1 className="mb-8 text-3xl font-bold">Featured Products</h1>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {data?.items.map((product) => (
-          <a
-            key={product.id}
-            href={`/products/${product.id}`}
-            className="group rounded-lg border p-4 transition-shadow hover:shadow-md"
-          >
-            <div className="mb-4 aspect-square rounded-md bg-gray-100" />
-            <h2 className="font-semibold group-hover:text-blue-600">
-              {product.name}
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">{product.category}</p>
-            <p className="mt-2 text-lg font-bold">
-              {formatCurrency(product.price)}
-            </p>
-          </a>
-        ))}
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold tracking-tight">Featured Products</h1>
+        <p className="mt-2 text-muted-foreground">Discover our latest collection</p>
       </div>
-      {data?.items.length === 0 && (
-        <p className="py-10 text-center text-gray-500">
-          No products available yet.
-        </p>
+
+      {data.items.length === 0 ? (
+        <p className="py-20 text-center text-muted-foreground">No products available yet.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {data.items.map((product) => (
+            <a
+              key={product.id}
+              href={`/products/${product.id}`}
+              className="group flex flex-col rounded-lg border bg-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+            >
+              <div className="overflow-hidden rounded-t-lg bg-muted">
+                <img
+                  src={product.images[0] ?? "/images/placeholder.svg"}
+                  alt={product.name}
+                  className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              </div>
+              <div className="flex flex-1 flex-col p-4">
+                <Badge variant="secondary" className="mb-2 w-fit text-xs">
+                  {product.category}
+                </Badge>
+                <h2 className="font-semibold leading-snug">{product.name}</h2>
+                <p className="mt-auto pt-3 text-lg font-bold">
+                  {formatCurrency(product.price)}
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
       )}
     </div>
   );

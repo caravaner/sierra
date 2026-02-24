@@ -3,9 +3,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
+      "outputs": ["dist/**", ".next/**", "public/sw.js", "public/workbox-*.js"]
+    },
+    "start": {
+      "dependsOn": ["build"],
+      "persistent": true
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },

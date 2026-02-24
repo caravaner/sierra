@@ -1,49 +1,44 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SessionProvider } from "next-auth/react";
 import { TRPCProvider } from "@/lib/trpc-provider";
+import { CartProvider } from "@/lib/cart-context";
+import { NavBar } from "@/components/nav-bar";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Sierra - Shop",
   description: "Your one-stop shop for quality products",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sierra",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
 };
 
 function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <TRPCProvider>{children}</TRPCProvider>
+      <TRPCProvider>
+        <CartProvider>{children}</CartProvider>
+      </TRPCProvider>
     </SessionProvider>
   );
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+      <body className="min-h-screen bg-background antialiased">
         <Providers>
-          <header className="border-b">
-            <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-              <a href="/" className="text-xl font-bold">
-                Sierra
-              </a>
-              <div className="flex items-center gap-6">
-                <a href="/products" className="hover:text-gray-600">
-                  Products
-                </a>
-                <a href="/cart" className="hover:text-gray-600">
-                  Cart
-                </a>
-                <a href="/orders" className="hover:text-gray-600">
-                  Orders
-                </a>
-              </div>
-            </nav>
-          </header>
-          <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+          <NavBar />
+          <main className="mx-auto max-w-7xl px-6 py-10">{children}</main>
+          <Toaster position="bottom-right" />
         </Providers>
       </body>
     </html>

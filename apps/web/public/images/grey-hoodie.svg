@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f3f4f6"/>
+  <path d="M120 130 L160 100 L200 115 L240 100 L280 130 L310 150 L280 180 L265 170 L265 310 L135 310 L135 170 L120 180 L90 150 Z" fill="#6b7280"/>
+  <path d="M175 100 Q200 140 225 100" fill="none" stroke="#4b5563" stroke-width="2"/>
+  <ellipse cx="200" cy="90" rx="25" ry="15" fill="#6b7280" stroke="#4b5563" stroke-width="1"/>
+  <text x="200" y="370" font-family="system-ui, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle">Grey Hoodie</text>
+</svg>

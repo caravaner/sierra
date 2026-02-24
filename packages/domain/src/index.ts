@@ -50,3 +50,5 @@ export type { CustomerRepository } from "./customer/customer.repository";
 export { CustomerCreatedEvent, CustomerProfileUpdatedEvent, CustomerAddressAddedEvent } from "./customer/customer.events";
 export { SyncCustomerCommand } from "./customer/commands/sync-customer.command";
 export type { SyncCustomerParams } from "./customer/commands/sync-customer.command";
+export { AddAddressCommand } from "./customer/commands/add-address.command";
+export type { AddAddressParams } from "./customer/commands/add-address.command";

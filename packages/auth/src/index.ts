@@ -9,6 +9,7 @@ export type { UserRole } from "./types";
 export type { Session } from "next-auth";
 
 const config: NextAuthConfig = {
+  trustHost: true,
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
   session: { strategy: "jwt" },
   pages: {

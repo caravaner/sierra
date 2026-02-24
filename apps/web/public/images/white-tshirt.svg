@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f3f4f6"/>
+  <path d="M120 120 L160 100 L200 115 L240 100 L280 120 L310 140 L280 170 L260 160 L260 300 L140 300 L140 160 L120 170 L90 140 Z" fill="#f8f8f8" stroke="#d1d5db" stroke-width="2"/>
+  <text x="200" y="370" font-family="system-ui, sans-serif" font-size="16" fill="#6b7280" text-anchor="middle">White T-Shirt</text>
+</svg>
