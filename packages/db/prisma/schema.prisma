@@ -18,10 +18,12 @@ model User {
   id             String    @id @default(cuid())
   name           String?
   email          String?   @unique
+  phone          String?   @unique
   emailVerified  DateTime? @map("email_verified")
   image          String?
   hashedPassword String?   @map("hashed_password")
   role           UserRole  @default(USER)
+  isActive       Boolean   @default(true) @map("is_active")
   attributes     Json      @default("{}") @db.JsonB
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
@@ -82,16 +84,19 @@ model VerificationToken {
 model Customer {
   id         String   @id @default(cuid())
   userId     String   @unique @map("user_id")
-  email      String   @unique
+  phone      String   @unique
+  email      String?  @unique
   firstName  String   @map("first_name")
   lastName   String   @map("last_name")
   attributes Json     @default("{}") @db.JsonB
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  addresses Address[]
-  orders    Order[]
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addresses     Address[]
+  orders        Order[]
+  subscriptions Subscription[]
+  invoices      Invoice[]
 
   @@map("customers")
 }
@@ -150,6 +155,16 @@ model InventoryItem {
   @@map("inventory_items")
 }
 
+// ─── Store Settings ─────────────────────────────────────────
+
+model StoreSettings {
+  id               String  @id @default("singleton")
+  deliveryFee      Decimal @default(500) @db.Decimal(10, 2) @map("delivery_fee")
+  freeDeliveryFrom Decimal @default(10000) @db.Decimal(10, 2) @map("free_delivery_from")
+
+  @@map("store_settings")
+}
+
 // ─── Order ──────────────────────────────────────────────────
 
 enum OrderStatus {
@@ -161,22 +176,38 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  ISSUED
+  PAID
+  CANCELLED
+}
+
 model Order {
   id              String      @id @default(cuid())
   customerId      String      @map("customer_id")
+  subscriptionId  String?     @map("subscription_id")
   status          OrderStatus @default(PENDING)
   shippingStreet  String      @map("shipping_street")
   shippingCity    String      @map("shipping_city")
   shippingState   String      @map("shipping_state")
   shippingZipCode String      @map("shipping_zip_code")
   shippingCountry String      @default("US") @map("shipping_country")
+  deliveryFee     Decimal     @default(0) @db.Decimal(10, 2) @map("delivery_fee")
   totalAmount     Decimal     @db.Decimal(10, 2) @map("total_amount")
   attributes      Json        @default("{}") @db.JsonB
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
 
-  customer Customer    @relation(fields: [customerId], references: [id])
-  items    OrderItem[]
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  items        OrderItem[]
+  invoice      Invoice?
 
   @@map("orders")
 }
@@ -194,6 +225,48 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+}
+
+// ─── Subscription ───────────────────────────────────────────
+
+model Subscription {
+  id              String             @id @default(cuid())
+  customerId      String             @map("customer_id")
+  intervalDays    Int                @map("interval_days")
+  status          SubscriptionStatus @default(ACTIVE)
+  nextDeliveryAt  DateTime           @map("next_delivery_at")
+  items           Json
+  shippingAddress Json               @map("shipping_address")
+  attributes      Json               @default("{}") @db.JsonB
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  orders   Order[]
+
+  @@map("subscriptions")
+}
+
+// ─── Invoice ────────────────────────────────────────────────
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique @map("invoice_number")
+  orderId       String        @unique @map("order_id")
+  customerId    String        @map("customer_id")
+  subtotal      Decimal       @db.Decimal(10, 2)
+  deliveryFee   Decimal       @db.Decimal(10, 2) @map("delivery_fee")
+  total         Decimal       @db.Decimal(10, 2)
+  status        InvoiceStatus @default(ISSUED)
+  issuedAt      DateTime      @map("issued_at")
+  dueAt         DateTime      @map("due_at")
+  paidAt        DateTime?     @map("paid_at")
+  attributes    Json          @default("{}") @db.JsonB
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@map("invoices")
 }
 
 // ─── Cart ─────────────────────────────────────────────────

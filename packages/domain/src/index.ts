@@ -25,6 +25,8 @@ export { PlaceOrderCommand } from "./order/commands/place-order.command";
 export type { PlaceOrderParams } from "./order/commands/place-order.command";
 export { CancelOrderCommand } from "./order/commands/cancel-order.command";
 export { UpdateOrderStatusCommand } from "./order/commands/update-order-status.command";
+export { calculateDeliveryFee } from "./order/delivery-fee.service";
+export type { DeliveryConfig } from "./order/delivery-fee.service";
 
 // Product
 export { Product } from "./product/product.entity";
@@ -42,6 +44,18 @@ export type { InventoryRepository } from "./inventory/inventory.repository";
 export { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent } from "./inventory/inventory.events";
 export { ReplenishStockCommand } from "./inventory/commands/replenish-stock.command";
 export type { ReplenishStockParams } from "./inventory/commands/replenish-stock.command";
+
+// Subscription
+export { Subscription } from "./subscription/subscription.entity";
+export { SubscriptionItem } from "./subscription/subscription.value-objects";
+export type { SubscriptionStatusType, SubscriptionShippingAddress, SubscriptionItemProps } from "./subscription/subscription.value-objects";
+export type { SubscriptionRepository } from "./subscription/subscription.repository";
+export { SubscriptionCreatedEvent, SubscriptionPausedEvent, SubscriptionResumedEvent, SubscriptionCancelledEvent } from "./subscription/subscription.events";
+export { CreateSubscriptionCommand } from "./subscription/commands/create-subscription.command";
+export type { CreateSubscriptionParams } from "./subscription/commands/create-subscription.command";
+export { PauseSubscriptionCommand } from "./subscription/commands/pause-subscription.command";
+export { ResumeSubscriptionCommand } from "./subscription/commands/resume-subscription.command";
+export { CancelSubscriptionCommand } from "./subscription/commands/cancel-subscription.command";
 
 // Customer
 export { Customer } from "./customer/customer.entity";

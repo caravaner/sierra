@@ -14,11 +14,36 @@ import { runCommand } from "../commands/run-command";
 import { toPrincipal } from "../commands/to-principal";
 
 export const productRouter = router({
+  // Storefront — always active-only, enforced server-side
   list: publicProcedure.input(productFilterSchema).query(async ({ ctx, input }) => {
     const repo = new PrismaProductRepository(ctx.prisma);
     const [products, total] = await Promise.all([
-      repo.findAll({ ...input, isActive: input.isActive ?? true }),
-      repo.count({ isActive: input.isActive ?? true, category: input.category }),
+      repo.findAll({ ...input, isActive: true }),
+      repo.count({ isActive: true, category: input.category }),
+    ]);
+    return {
+      items: products.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        sku: p.sku,
+        category: p.category,
+        images: p.images,
+        isActive: p.isActive,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      })),
+      total,
+    };
+  }),
+
+  // Admin — returns all products regardless of status
+  adminList: adminProcedure.input(productFilterSchema).query(async ({ ctx, input }) => {
+    const repo = new PrismaProductRepository(ctx.prisma);
+    const [products, total] = await Promise.all([
+      repo.findAll({ ...input }),
+      repo.count({ isActive: input.isActive, category: input.category }),
     ]);
     return {
       items: products.map((p) => ({
@@ -60,8 +85,8 @@ export const productRouter = router({
     return runCommand(
       ctx.prisma,
       principal,
-      (uow, { productRepo }) =>
-        new CreateProductCommand(uow, productRepo),
+      (uow, { productRepo, inventoryRepo }) =>
+        new CreateProductCommand(uow, productRepo, inventoryRepo),
       input,
     );
   }),

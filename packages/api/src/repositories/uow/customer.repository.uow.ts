@@ -70,6 +70,7 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
       create: {
         id: entity.id,
         userId: entity.userId,
+        phone: entity.phone,
         email: entity.email,
         firstName: entity.firstName,
         lastName: entity.lastName,
@@ -87,6 +88,7 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
         },
       },
       update: {
+        phone: entity.phone,
         email: entity.email,
         firstName: entity.firstName,
         lastName: entity.lastName,
@@ -102,6 +104,7 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
     return Customer.reconstitute({
       id: row.id,
       userId: row.userId,
+      phone: row.phone,
       email: row.email,
       firstName: row.firstName,
       lastName: row.lastName,

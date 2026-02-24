@@ -4,15 +4,19 @@ import {
   Package,
   Warehouse,
   Users,
+  RefreshCw,
+  Settings,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/subscriptions", label: "Subscriptions", icon: RefreshCw },
   { href: "/products", label: "Products", icon: Package },
   { href: "/inventory", label: "Inventory", icon: Warehouse },
   { href: "/users", label: "Users", icon: Users },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

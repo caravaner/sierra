@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { SessionProvider } from "next-auth/react";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -10,11 +9,7 @@ export const metadata: Metadata = {
 };
 
 function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <SessionProvider>
-      <TRPCProvider>{children}</TRPCProvider>
-    </SessionProvider>
-  );
+  return <TRPCProvider>{children}</TRPCProvider>;
 }
 
 export default function RootLayout({

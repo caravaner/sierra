@@ -19,7 +19,8 @@ export interface CustomerAddress {
 
 interface CustomerProps {
   userId: string;
-  email: string;
+  phone: string;
+  email?: string;
   firstName: string;
   lastName: string;
   addresses: CustomerAddress[];
@@ -31,6 +32,9 @@ interface CustomerProps {
 export class Customer extends AggregateRoot<CustomerProps> {
   get userId() {
     return this.props.userId;
+  }
+  get phone() {
+    return this.props.phone;
   }
   get email() {
     return this.props.email;
@@ -67,13 +71,15 @@ export class Customer extends AggregateRoot<CustomerProps> {
   static create(principalId: string, params: {
     id: string;
     userId: string;
-    email: string;
+    phone: string;
+    email?: string;
     firstName: string;
     lastName: string;
   }): Customer {
     const now = new Date();
     const props: CustomerProps = {
       userId: params.userId,
+      phone: params.phone,
       email: params.email,
       firstName: params.firstName,
       lastName: params.lastName,
@@ -85,6 +91,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
 
     const event = new CustomerCreatedEvent(params.id, principalId, {
       userId: params.userId,
+      phone: params.phone,
       email: params.email,
       firstName: params.firstName,
       lastName: params.lastName,
@@ -96,7 +103,8 @@ export class Customer extends AggregateRoot<CustomerProps> {
   static reconstitute(params: {
     id: string;
     userId: string;
-    email: string;
+    phone: string;
+    email?: string;
     firstName: string;
     lastName: string;
     addresses?: CustomerAddress[];
@@ -106,6 +114,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
   }): Customer {
     return new Customer(params.id, {
       userId: params.userId,
+      phone: params.phone,
       email: params.email,
       firstName: params.firstName,
       lastName: params.lastName,
@@ -117,16 +126,19 @@ export class Customer extends AggregateRoot<CustomerProps> {
   }
 
   updateProfile(principalId: string, params: {
+    phone?: string;
     email?: string;
     firstName?: string;
     lastName?: string;
   }): Customer {
     const before = {
+      phone: this.props.phone,
       email: this.props.email,
       firstName: this.props.firstName,
       lastName: this.props.lastName,
     };
     const after = {
+      phone: params.phone ?? this.props.phone,
       email: params.email ?? this.props.email,
       firstName: params.firstName ?? this.props.firstName,
       lastName: params.lastName ?? this.props.lastName,
@@ -135,6 +147,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
     return this.addEvent(
       {
         ...this.props,
+        phone: after.phone,
         email: after.email,
         firstName: after.firstName,
         lastName: after.lastName,

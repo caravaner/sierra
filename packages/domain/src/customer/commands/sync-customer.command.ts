@@ -6,7 +6,8 @@ import { Customer } from "../customer.entity";
 
 export interface SyncCustomerParams {
   userId: string;
-  email: string;
+  phone: string;
+  email?: string;
   firstName: string;
   lastName: string;
 }
@@ -24,6 +25,7 @@ export class SyncCustomerCommand extends Command<SyncCustomerParams, { id: strin
 
     if (existing) {
       const updated = existing.updateProfile(principal.id, {
+        phone: input.phone,
         email: input.email,
         firstName: input.firstName,
         lastName: input.lastName,

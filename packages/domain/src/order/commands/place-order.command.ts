@@ -8,6 +8,7 @@ import { OrderItem, ShippingAddress } from "../order.value-objects";
 
 export interface PlaceOrderParams {
   customerId: string;
+  subscriptionId?: string;
   items: { productId: string; name: string; quantity: number; unitPrice: number }[];
   shippingAddress: {
     street: string;
@@ -16,6 +17,7 @@ export interface PlaceOrderParams {
     zipCode: string;
     country: string;
   };
+  deliveryFee?: number;
 }
 
 export class PlaceOrderCommand extends Command<PlaceOrderParams, { id: string }> {
@@ -51,8 +53,10 @@ export class PlaceOrderCommand extends Command<PlaceOrderParams, { id: string }>
     const order = Order.create(principal.id, {
       id: crypto.randomUUID(),
       customerId: input.customerId,
+      subscriptionId: input.subscriptionId,
       items: orderItems,
       shippingAddress,
+      deliveryFee: input.deliveryFee,
     });
 
     await this.orderRepo.save(order);

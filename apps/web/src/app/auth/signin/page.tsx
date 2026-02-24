@@ -41,7 +41,7 @@ function SignInForm() {
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{error}</p>
       )}
       <div className="space-y-2">
-        <Label htmlFor="login">Email or Username</Label>
+        <Label htmlFor="login">Phone, email or username</Label>
         <Input
           id="login"
           type="text"
@@ -82,12 +82,19 @@ export default function SignInPage() {
             <Suspense fallback={<p className="py-4 text-center text-muted-foreground text-sm">Loading...</p>}>
               <SignInForm />
             </Suspense>
-            <p className="text-center text-sm text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <a href="/auth/signup" className="font-medium text-foreground underline underline-offset-4">
-                Sign Up
-              </a>
-            </p>
+            <div className="space-y-2 text-center text-sm text-muted-foreground">
+              <p>
+                Don&apos;t have an account?{" "}
+                <a href="/auth/signup" className="font-medium text-foreground underline underline-offset-4">
+                  Sign Up
+                </a>
+              </p>
+              <p>
+                <a href="/auth/forgot-password" className="font-medium text-foreground underline underline-offset-4">
+                  Forgot password?
+                </a>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

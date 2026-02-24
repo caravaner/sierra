@@ -11,9 +11,11 @@ import { OrderPlacedEvent, OrderStatusChangedEvent, OrderCancelledEvent } from "
 
 interface OrderProps {
   customerId: string;
+  subscriptionId?: string;
   items: OrderItem[];
   status: OrderStatus;
   shippingAddress: ShippingAddress;
+  deliveryFee: number;
   totalAmount: number;
   attributes: AttributeBag;
   createdAt: Date;
@@ -24,6 +26,9 @@ export class Order extends AggregateRoot<OrderProps> {
   get customerId() {
     return this.props.customerId;
   }
+  get subscriptionId() {
+    return this.props.subscriptionId;
+  }
   get items() {
     return this.props.items;
   }
@@ -32,6 +37,9 @@ export class Order extends AggregateRoot<OrderProps> {
   }
   get shippingAddress() {
     return this.props.shippingAddress;
+  }
+  get deliveryFee() {
+    return this.props.deliveryFee;
   }
   get totalAmount() {
     return this.props.totalAmount;
@@ -53,24 +61,27 @@ export class Order extends AggregateRoot<OrderProps> {
   static create(principalId: string, params: {
     id: string;
     customerId: string;
+    subscriptionId?: string;
     items: OrderItem[];
     shippingAddress: ShippingAddress;
+    deliveryFee?: number;
   }): Order {
     if (params.items.length === 0) {
       throw new Error("Order must have at least one item");
     }
 
-    const totalAmount = params.items.reduce(
-      (sum, item) => sum + item.lineTotal,
-      0,
-    );
+    const deliveryFee = params.deliveryFee ?? 0;
+    const subtotal = params.items.reduce((sum, item) => sum + item.lineTotal, 0);
+    const totalAmount = subtotal + deliveryFee;
 
     const now = new Date();
     const props: OrderProps = {
       customerId: params.customerId,
+      subscriptionId: params.subscriptionId,
       items: params.items,
       status: OrderStatus.create("PENDING"),
       shippingAddress: params.shippingAddress,
+      deliveryFee,
       totalAmount,
       attributes: AttributeBag.empty(),
       createdAt: now,
@@ -90,24 +101,28 @@ export class Order extends AggregateRoot<OrderProps> {
   static reconstitute(params: {
     id: string;
     customerId: string;
+    subscriptionId?: string;
     items: OrderItem[];
     shippingAddress: ShippingAddress;
     status?: OrderStatusType;
+    deliveryFee?: number;
     totalAmount?: number;
     attributes?: AttributeBag;
     createdAt?: Date;
     updatedAt?: Date;
   }): Order {
-    const totalAmount = params.totalAmount ?? params.items.reduce(
-      (sum, item) => sum + item.lineTotal,
-      0,
+    const deliveryFee = params.deliveryFee ?? 0;
+    const totalAmount = params.totalAmount ?? (
+      params.items.reduce((sum, item) => sum + item.lineTotal, 0) + deliveryFee
     );
 
     return new Order(params.id, {
       customerId: params.customerId,
+      subscriptionId: params.subscriptionId,
       items: params.items,
       status: OrderStatus.create(params.status ?? "PENDING"),
       shippingAddress: params.shippingAddress,
+      deliveryFee,
       totalAmount,
       attributes: params.attributes ?? AttributeBag.empty(),
       createdAt: params.createdAt ?? new Date(),

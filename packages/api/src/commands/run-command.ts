@@ -5,12 +5,14 @@ import { UowOrderRepository } from "../repositories/uow/order.repository.uow";
 import { UowCustomerRepository } from "../repositories/uow/customer.repository.uow";
 import { UowProductRepository } from "../repositories/uow/product.repository.uow";
 import { UowInventoryRepository } from "../repositories/uow/inventory.repository.uow";
+import { UowSubscriptionRepository } from "../repositories/uow/subscription.repository.uow";
 
 export interface Repos {
   orderRepo: UowOrderRepository;
   customerRepo: UowCustomerRepository;
   productRepo: UowProductRepository;
   inventoryRepo: UowInventoryRepository;
+  subscriptionRepo: UowSubscriptionRepository;
 }
 
 export async function runCommand<TParams, TResult>(
@@ -25,6 +27,7 @@ export async function runCommand<TParams, TResult>(
     customerRepo: new UowCustomerRepository(prisma, uow),
     productRepo: new UowProductRepository(prisma, uow),
     inventoryRepo: new UowInventoryRepository(prisma, uow),
+    subscriptionRepo: new UowSubscriptionRepository(prisma, uow),
   };
   const command = factory(uow, repos);
   const result = await command.execute(principal, params);

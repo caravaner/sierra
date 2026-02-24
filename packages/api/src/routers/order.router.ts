@@ -3,6 +3,7 @@ import {
   PlaceOrderCommand,
   CancelOrderCommand,
   UpdateOrderStatusCommand,
+  calculateDeliveryFee,
 } from "@sierra/domain";
 import {
   placeOrderSchema,
@@ -46,12 +47,20 @@ export const orderRouter = router({
     const customer = await customerRepo.findByUserId(principal.id);
     if (!customer) throw new Error("Customer not found. Please complete your profile.");
 
+    const settings = await ctx.prisma.storeSettings.findUnique({ where: { id: "singleton" } });
+    const config = {
+      deliveryFee: Number(settings?.deliveryFee ?? 500),
+      freeDeliveryFrom: Number(settings?.freeDeliveryFrom ?? 10000),
+    };
+    const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+    const deliveryFee = calculateDeliveryFee(subtotal, config);
+
     return runCommand(
       ctx.prisma,
       principal,
       (uow, { orderRepo, inventoryRepo }) =>
         new PlaceOrderCommand(uow, orderRepo, inventoryRepo),
-      { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress },
+      { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress, deliveryFee },
     );
   }),
 

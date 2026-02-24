@@ -14,6 +14,7 @@ export default function SignUpPage() {
   const register = trpc.auth.register.useMutation();
 
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,9 +33,10 @@ export default function SignUpPage() {
     setLoading(true);
 
     try {
-      await register.mutateAsync({ name, email, password });
+      await register.mutateAsync({ name, phone, email: email || undefined, password });
 
-      const result = await signIn("credentials", { login: email, password, redirect: false });
+      // Sign in with phone (always present)
+      const result = await signIn("credentials", { login: phone, password, redirect: false });
 
       if (result?.error) {
         setError("Account created but sign-in failed. Please sign in manually.");
@@ -76,13 +78,27 @@ export default function SignUpPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="phone">Phone number</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  autoComplete="tel"
+                  placeholder="+1 555 000 0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  Email{" "}
+                  <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                   autoComplete="email"
                 />
               </div>

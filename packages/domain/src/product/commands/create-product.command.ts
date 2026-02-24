@@ -2,7 +2,9 @@ import { Command } from "../../shared/command.base";
 import type { Principal } from "../../shared/principal";
 import type { UnitOfWork } from "../../shared/unit-of-work";
 import type { ProductRepository } from "../product.repository";
+import type { InventoryRepository } from "../../inventory/inventory.repository";
 import { Product } from "../product.entity";
+import { InventoryItem } from "../../inventory/inventory.entity";
 
 export interface CreateProductParams {
   name: string;
@@ -17,6 +19,7 @@ export class CreateProductCommand extends Command<CreateProductParams, { id: str
   constructor(
     uow: UnitOfWork,
     private productRepo: ProductRepository,
+    private inventoryRepo: InventoryRepository,
   ) {
     super(uow);
   }
@@ -27,12 +30,16 @@ export class CreateProductCommand extends Command<CreateProductParams, { id: str
       throw new Error(`Product with SKU ${input.sku} already exists`);
     }
 
-    const product = Product.create(principal.id, {
-      id: crypto.randomUUID(),
-      ...input,
-    });
-
+    const productId = crypto.randomUUID();
+    const product = Product.create(principal.id, { id: productId, ...input });
     await this.productRepo.save(product);
-    return { id: product.id };
+
+    const inventoryItem = InventoryItem.create(principal.id, {
+      id: crypto.randomUUID(),
+      productId,
+    });
+    await this.inventoryRepo.save(inventoryItem);
+
+    return { id: productId };
   }
 }

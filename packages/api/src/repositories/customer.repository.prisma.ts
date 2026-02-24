@@ -51,6 +51,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       create: {
         id: entity.id,
         userId: entity.userId,
+        phone: entity.phone,
         email: entity.email,
         firstName: entity.firstName,
         lastName: entity.lastName,
@@ -68,6 +69,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
         },
       },
       update: {
+        phone: entity.phone,
         email: entity.email,
         firstName: entity.firstName,
         lastName: entity.lastName,
@@ -87,7 +89,8 @@ export class PrismaCustomerRepository implements CustomerRepository {
     return Customer.reconstitute({
       id: row.id,
       userId: row.userId,
-      email: row.email,
+      phone: row.phone,
+      email: row.email ?? undefined,
       firstName: row.firstName,
       lastName: row.lastName,
       addresses: row.addresses.map(

@@ -76,12 +76,14 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
       create: {
         id: entity.id,
         customerId: entity.customerId,
+        subscriptionId: entity.subscriptionId,
         status: entity.status.value,
         shippingStreet: entity.shippingAddress.street,
         shippingCity: entity.shippingAddress.city,
         shippingState: entity.shippingAddress.state,
         shippingZipCode: entity.shippingAddress.zipCode,
         shippingCountry: entity.shippingAddress.country,
+        deliveryFee: entity.deliveryFee,
         totalAmount: entity.totalAmount,
         attributes: entity.attributes.toJSON(),
         items: {
@@ -95,6 +97,7 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
       },
       update: {
         status: entity.status.value,
+        deliveryFee: entity.deliveryFee,
         totalAmount: entity.totalAmount,
         attributes: entity.attributes.toJSON(),
       },
@@ -108,7 +111,9 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
     return Order.reconstitute({
       id: row.id,
       customerId: row.customerId,
+      subscriptionId: row.subscriptionId ?? undefined,
       status: row.status,
+      deliveryFee: Number(row.deliveryFee ?? 0),
       totalAmount: Number(row.totalAmount),
       items: row.items.map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies (re-installed inside Docker)
+**/node_modules
+
+# Build outputs
+**/.next
+**/dist
+**/build
+
+# Local env files (injected at runtime via Cloud Run env vars)
+.env
+.env.*
+!.env.example
+
+# Dev tooling
+**/.turbo
+**/coverage
+**/*.test.*
+**/*.spec.*
+
+# Misc
+**/.DS_Store
+**/Thumbs.db
+*.md

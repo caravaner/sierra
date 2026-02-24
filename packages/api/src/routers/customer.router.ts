@@ -13,6 +13,7 @@ export const customerRouter = router({
     if (!customer) return null;
     return {
       id: customer.id,
+      phone: customer.phone,
       email: customer.email,
       firstName: customer.firstName,
       lastName: customer.lastName,
@@ -24,7 +25,8 @@ export const customerRouter = router({
   sync: protectedProcedure
     .input(
       z.object({
-        email: z.string().email(),
+        phone: z.string().min(1),
+        email: z.string().email().optional(),
         firstName: z.string().min(1),
         lastName: z.string().min(1),
       }),
@@ -114,6 +116,7 @@ export const customerRouter = router({
     return {
       items: customers.map((c) => ({
         id: c.id,
+        phone: c.phone,
         email: c.email,
         firstName: c.firstName,
         lastName: c.lastName,
@@ -134,6 +137,7 @@ export const customerRouter = router({
       return {
         id: customer.id,
         userId: customer.userId,
+        phone: customer.phone,
         email: customer.email,
         firstName: customer.firstName,
         lastName: customer.lastName,

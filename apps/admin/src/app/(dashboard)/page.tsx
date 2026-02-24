@@ -17,9 +17,7 @@ function statusVariant(status: string) {
 }
 
 export default function DashboardPage() {
-  const orders = trpc.order.list.useQuery({ limit: 5, offset: 0 });
-  const products = trpc.product.list.useQuery({ limit: 1, offset: 0 });
-  const inventory = trpc.inventory.list.useQuery({ limit: 1, offset: 0, lowStock: true });
+  const { data, isLoading } = trpc.dashboard.stats.useQuery();
 
   return (
     <div>
@@ -36,7 +34,7 @@ export default function DashboardPage() {
               <ShoppingCart className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{orders.data?.total ?? "—"}</p>
+              <p className="text-3xl font-bold">{isLoading ? "—" : data?.totalOrders}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 View all orders <ArrowRight className="h-3 w-3" />
               </p>
@@ -51,7 +49,7 @@ export default function DashboardPage() {
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{products.data?.total ?? "—"}</p>
+              <p className="text-3xl font-bold">{isLoading ? "—" : data?.totalProducts}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 Manage products <ArrowRight className="h-3 w-3" />
               </p>
@@ -66,7 +64,7 @@ export default function DashboardPage() {
               <Warehouse className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{inventory.data?.total ?? "—"}</p>
+              <p className="text-3xl font-bold">{isLoading ? "—" : data?.lowStockCount}</p>
               <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                 View inventory <ArrowRight className="h-3 w-3" />
               </p>
@@ -93,7 +91,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.data?.items.map((order) => (
+              {data?.recentOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-mono font-medium">
                     #{order.id.slice(0, 8).toUpperCase()}
@@ -105,7 +103,7 @@ export default function DashboardPage() {
                   <TableCell className="font-medium">{formatCurrency(Number(order.totalAmount))}</TableCell>
                 </TableRow>
               ))}
-              {orders.data?.items.length === 0 && (
+              {data?.recentOrders.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                     No orders yet.

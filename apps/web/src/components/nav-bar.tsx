@@ -34,9 +34,17 @@ export function NavBar() {
           </Button>
 
           {session?.user && (
-            <Button variant="ghost" size="sm" asChild>
-              <a href="/orders">Orders</a>
-            </Button>
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/orders">Orders</a>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/subscriptions">Subscriptions</a>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/account/change-password">Account</a>
+              </Button>
+            </>
           )}
 
           {session?.user ? (

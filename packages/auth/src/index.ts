@@ -27,12 +27,16 @@ const config: NextAuthConfig = {
 
         const login = (credentials.login as string).trim();
         const isEmail = login.includes("@");
+        const isPhone = /^\+?\d[\d\s\-().]{6,}$/.test(login);
 
         const user = isEmail
           ? await prisma.user.findUnique({ where: { email: login } })
-          : await prisma.user.findFirst({ where: { name: login } });
+          : isPhone
+            ? await prisma.user.findUnique({ where: { phone: login } })
+            : await prisma.user.findFirst({ where: { name: login } });
 
         if (!user?.hashedPassword) return null;
+        if (user.isActive === false) return null;
 
         const isValid = await bcrypt.compare(
           credentials.password as string,
