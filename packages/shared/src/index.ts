@@ -1,3 +1,6 @@
+// Config
+export * from "./config";
+
 // Validators
 export * from "./validators/common.schema";
 export * from "./validators/product.schema";

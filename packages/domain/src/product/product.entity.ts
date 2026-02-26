@@ -31,7 +31,7 @@ export class Product extends AggregateRoot<ProductProps> {
     return this.props.description;
   }
   get price() {
-    return this.props.price.value;
+    return this.props.price.amount;
   }
   get sku() {
     return this.props.sku.value;
@@ -93,7 +93,7 @@ export class Product extends AggregateRoot<ProductProps> {
     const event = new ProductCreatedEvent(params.id, principalId, {
       name: props.name,
       description: props.description,
-      price: props.price.value,
+      price: props.price.amount,
       sku: props.sku.value,
       category: props.category,
       images: props.images,
@@ -150,8 +150,8 @@ export class Product extends AggregateRoot<ProductProps> {
       before.description = this.props.description;
       after.description = params.description;
     }
-    if (params.price !== undefined && params.price !== this.props.price.value) {
-      before.price = this.props.price.value;
+    if (params.price !== undefined && params.price.toFixed(2) !== this.props.price.amount) {
+      before.price = this.props.price.amount;
       after.price = params.price;
     }
     if (params.category !== undefined && params.category !== this.props.category) {

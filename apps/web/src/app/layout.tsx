@@ -4,16 +4,16 @@ import { TRPCProvider } from "@/lib/trpc-provider";
 import { CartProvider } from "@/lib/cart-context";
 import { NavBar } from "@/components/nav-bar";
 import { Toaster } from "sonner";
+import { APP_NAME } from "@sierra/shared";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sierra - Shop",
+  title: `${APP_NAME} - Shop`,
   description: "Your one-stop shop for quality products",
   manifest: "/manifest.json",
   appleWebApp: {
-    capable: true,
     statusBarStyle: "default",
-    title: "Sierra",
+    title: APP_NAME,
   },
 };
 

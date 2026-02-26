@@ -10,6 +10,11 @@ import { PrismaSubscriptionRepository } from "../repositories/subscription.repos
 import { PrismaCustomerRepository } from "../repositories/customer.repository.prisma";
 import { runCommand } from "../commands/run-command";
 import { toPrincipal } from "../commands/to-principal";
+import { getNotificationService } from "@sierra/notifications";
+
+function notify() {
+  return getNotificationService();
+}
 
 const subscriptionItemSchema = z.object({
   productId: z.string(),
@@ -42,7 +47,7 @@ export const subscriptionRouter = router({
       const customer = await customerRepo.findByUserId(principal.id);
       if (!customer) throw new Error("Customer not found. Please complete your profile.");
 
-      return runCommand(
+      const result = await runCommand(
         ctx.prisma,
         principal,
         (uow, { subscriptionRepo }) => new CreateSubscriptionCommand(uow, subscriptionRepo),
@@ -54,6 +59,24 @@ export const subscriptionRouter = router({
           shippingAddress: input.shippingAddress,
         },
       );
+
+      if (customer.email) {
+        void notify()
+          .sendSubscriptionCreated(customer.email, {
+            name: customer.fullName,
+            subscriptionId: result.id,
+            intervalDays: input.intervalDays,
+            nextDeliveryAt: input.nextDeliveryAt,
+            items: input.items.map((i) => ({
+              name: i.name,
+              quantity: i.quantity,
+              unitPrice: i.unitPrice,
+            })),
+          })
+          .catch(console.error);
+      }
+
+      return result;
     }),
 
   mySubscriptions: protectedProcedure.query(async ({ ctx }) => {

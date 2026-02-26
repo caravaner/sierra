@@ -18,6 +18,11 @@ const config: NextAuthConfig = {
   pages: {
     signIn: "/auth/signin",
   },
+  ...(process.env.AUTH_COOKIE_NAME && {
+    cookies: {
+      sessionToken: { name: process.env.AUTH_COOKIE_NAME },
+    },
+  }),
   providers: [
     Credentials({
       name: "credentials",

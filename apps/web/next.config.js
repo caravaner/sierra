@@ -8,7 +8,7 @@ const nextConfig = {
     // Ensures shared workspace packages are included in the standalone bundle
     outputFileTracingRoot: path.join(__dirname, "../../"),
   },
-  transpilePackages: ["@sierra/api", "@sierra/db", "@sierra/domain", "@sierra/shared"],
+  transpilePackages: ["@sierra/api", "@sierra/db", "@sierra/domain", "@sierra/shared", "@sierra/notifications"],
 };
 
 module.exports = withPWA({

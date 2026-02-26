@@ -10,6 +10,7 @@ import { subscriptionRouter } from "./routers/subscription.router";
 import { invoiceRouter } from "./routers/invoice.router";
 import { dashboardRouter } from "./routers/dashboard.router";
 import { userRouter } from "./routers/user.router";
+import { notificationRouter } from "./routers/notification.router";
 
 export const appRouter = router({
   product: productRouter,
@@ -23,6 +24,7 @@ export const appRouter = router({
   invoice: invoiceRouter,
   dashboard: dashboardRouter,
   user: userRouter,
+  notification: notificationRouter,
 });
 
 export type AppRouter = typeof appRouter;

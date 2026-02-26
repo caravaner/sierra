@@ -8,6 +8,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { APP_NAME } from "@sierra/shared";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -24,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen">
       <aside className="flex w-60 flex-col border-r bg-card">
         <div className="px-6 py-5">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sierra</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{APP_NAME}</p>
           <h1 className="text-lg font-bold">Admin</h1>
         </div>
         <Separator />

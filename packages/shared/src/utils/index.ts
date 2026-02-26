@@ -1,8 +1,8 @@
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
+export function formatCurrency(amount: number | string, currency = "NGN"): string {
+  return new Intl.NumberFormat("en-NG", {
     style: "currency",
-    currency: "USD",
-  }).format(amount);
+    currency,
+  }).format(typeof amount === "string" ? parseFloat(amount) : amount);
 }
 
 export function formatDate(date: Date): string {

@@ -15,6 +15,11 @@ import { PrismaOrderRepository } from "../repositories/order.repository.prisma";
 import { PrismaCustomerRepository } from "../repositories/customer.repository.prisma";
 import { runCommand } from "../commands/run-command";
 import { toPrincipal } from "../commands/to-principal";
+import { getNotificationService } from "@sierra/notifications";
+
+function notify() {
+  return getNotificationService();
+}
 
 export const orderRouter = router({
   myOrders: protectedProcedure.query(async ({ ctx }) => {
@@ -55,13 +60,37 @@ export const orderRouter = router({
     const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
     const deliveryFee = calculateDeliveryFee(subtotal, config);
 
-    return runCommand(
+    const result = await runCommand(
       ctx.prisma,
       principal,
       (uow, { orderRepo, inventoryRepo }) =>
         new PlaceOrderCommand(uow, orderRepo, inventoryRepo),
       { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress, deliveryFee },
     );
+
+    if (customer.email) {
+      const shippingAddress = [
+        input.shippingAddress.street,
+        input.shippingAddress.city,
+        input.shippingAddress.state,
+      ].join(", ");
+
+      void notify()
+        .sendOrderPlaced(customer.email, {
+          name: customer.fullName,
+          orderId: result.id,
+          items: input.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+          totalAmount: subtotal + deliveryFee,
+          shippingAddress,
+        })
+        .catch(console.error);
+    }
+
+    return result;
   }),
 
   cancel: protectedProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
@@ -99,12 +128,29 @@ export const orderRouter = router({
     .input(z.object({ id: z.string(), ...updateOrderStatusSchema.shape }))
     .mutation(async ({ ctx, input }) => {
       const principal = toPrincipal(ctx.session);
-      return runCommand(
+      const result = await runCommand(
         ctx.prisma,
         principal,
         (uow, { orderRepo }) =>
           new UpdateOrderStatusCommand(uow, orderRepo),
         { orderId: input.id, status: input.status },
       );
+
+      // Fire-and-forget notification
+      void (async () => {
+        const order = await ctx.prisma.order.findUnique({
+          where: { id: input.id },
+          include: { customer: true },
+        });
+        if (order?.customer.email) {
+          await notify().sendOrderStatusChanged(order.customer.email, {
+            name: `${order.customer.firstName} ${order.customer.lastName}`,
+            orderId: input.id,
+            newStatus: input.status as "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED",
+          });
+        }
+      })().catch(console.error);
+
+      return result;
     }),
 });

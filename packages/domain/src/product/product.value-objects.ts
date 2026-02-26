@@ -1,17 +1,31 @@
-import { ValueObject } from "../shared/value-object.base";
+import {ValueObject} from "../shared/value-object.base";
 
-export class Money extends ValueObject<number> {
-  static create(amount: number): Money {
-    if (amount < 0) throw new Error("Price cannot be negative");
-    return new Money(Math.round(amount * 100) / 100);
-  }
+export interface MoneyProps {
+    value: string;
+    currency: string;
+}
+
+export class Money extends ValueObject<MoneyProps> {
+    static create(amount: number | string, currency = "NGN"): Money {
+        const numeric = typeof amount === "string" ? parseFloat(amount) : amount;
+        if (numeric < 0) throw new Error("Price cannot be negative");
+        return new Money({ value: numeric.toFixed(2), currency });
+    }
+
+    get amount(): string {
+        return this.value.value;
+    }
+
+    get currency(): string {
+        return this.value.currency;
+    }
 }
 
 export class SKU extends ValueObject<string> {
-  static create(sku: string): SKU {
-    if (!sku || sku.trim().length === 0) {
-      throw new Error("SKU cannot be empty");
+    static create(sku: string): SKU {
+        if (!sku || sku.trim().length === 0) {
+            throw new Error("SKU cannot be empty");
+        }
+        return new SKU(sku.trim().toUpperCase());
     }
-    return new SKU(sku.trim().toUpperCase());
-  }
 }

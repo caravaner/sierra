@@ -3,7 +3,7 @@ import { DomainEvent } from "../shared/domain-event.base";
 export interface ProductCreatedPayload {
   name: string;
   description: string | null;
-  price: number;
+  price: string;
   sku: string;
   category: string | null;
   images: string[];

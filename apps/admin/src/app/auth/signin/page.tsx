@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { APP_NAME } from "@sierra/shared";
 
 export default function SignInPage() {
   const searchParams = useSearchParams();
@@ -35,7 +36,7 @@ export default function SignInPage() {
     <div className="w-full max-w-sm">
       <Card>
         <CardHeader className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sierra</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{APP_NAME}</p>
           <CardTitle className="text-xl">Admin Portal</CardTitle>
           <CardDescription>Sign in to access the dashboard</CardDescription>
         </CardHeader>

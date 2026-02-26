@@ -6,7 +6,9 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { APP_NAME } from "@sierra/shared";
 
 function SignInForm() {
   const router = useRouter();
@@ -53,9 +55,8 @@ function SignInForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -76,7 +77,7 @@ export default function SignInPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Welcome back</CardTitle>
-            <CardDescription>Sign in to your Sierra account</CardDescription>
+            <CardDescription>Sign in to your {APP_NAME} account</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Suspense fallback={<p className="py-4 text-center text-muted-foreground text-sm">Loading...</p>}>

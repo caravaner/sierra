@@ -32,10 +32,12 @@ model User {
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  accounts Account[]
-  sessions Session[]
-  customer Customer?
-  cart     Cart?
+  accounts            Account[]
+  sessions            Session[]
+  customer            Customer?
+  cart                Cart?
+  passwordResetTokens PasswordResetToken[]
+  pushSubscriptions   PushSubscription[]
 
   @@map("users")
   @@schema("main")
@@ -323,6 +325,37 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@map("cart_items")
+  @@schema("main")
+}
+
+// ─── Password Reset ──────────────────────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+  @@schema("main")
+}
+
+// ─── Push Subscriptions ──────────────────────────────────────────────────────
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
   @@schema("main")
 }
 

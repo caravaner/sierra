@@ -10,11 +10,6 @@ const middleware: NextMiddleware = auth((req) => {
     pathname.startsWith(route),
   );
 
-  // ADMIN-only users belong in the admin panel, not the storefront
-  if (req.auth?.user?.role === "ADMIN") {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
-
   if (isProtected && !req.auth) {
     const signInUrl = new URL("/auth/signin", req.url);
     signInUrl.searchParams.set("callbackUrl", pathname);

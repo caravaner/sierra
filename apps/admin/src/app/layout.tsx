@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { Toaster } from "sonner";
+import { APP_NAME } from "@sierra/shared";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sierra Admin",
-  description: "Sierra Order Platform - Admin Dashboard",
+  title: `${APP_NAME} Admin`,
+  description: `${APP_NAME} Order Platform - Admin Dashboard`,
 };
 
 function Providers({ children }: { children: React.ReactNode }) {

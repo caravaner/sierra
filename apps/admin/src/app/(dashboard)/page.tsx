@@ -1,7 +1,7 @@
 "use client";
 
 import { trpc } from "@/lib/trpc";
-import { formatCurrency } from "@sierra/shared";
+import { formatCurrency, APP_NAME } from "@sierra/shared";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +23,7 @@ export default function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back to Sierra Admin</p>
+        <p className="text-muted-foreground">Welcome back to {APP_NAME} Admin</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
