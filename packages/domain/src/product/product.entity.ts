@@ -17,6 +17,7 @@ interface ProductProps {
   category: string | null;
   images: string[];
   isActive: boolean;
+  version: number;
   attributes: AttributeBag;
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +44,9 @@ export class Product extends AggregateRoot<ProductProps> {
   }
   get isActive() {
     return this.props.isActive;
+  }
+  get version() {
+    return this.props.version;
   }
   get attributes() {
     return this.props.attributes;
@@ -80,6 +84,7 @@ export class Product extends AggregateRoot<ProductProps> {
       category: params.category ?? null,
       images: params.images ?? [],
       isActive: true,
+      version: -1,
       attributes: AttributeBag.empty(),
       createdAt: now,
       updatedAt: now,
@@ -107,6 +112,7 @@ export class Product extends AggregateRoot<ProductProps> {
     category?: string | null;
     images?: string[];
     isActive?: boolean;
+    version?: number;
     attributes?: AttributeBag;
     createdAt?: Date;
     updatedAt?: Date;
@@ -119,6 +125,7 @@ export class Product extends AggregateRoot<ProductProps> {
       category: params.category ?? null,
       images: params.images ?? [],
       isActive: params.isActive ?? true,
+      version: params.version ?? 0,
       attributes: params.attributes ?? AttributeBag.empty(),
       createdAt: params.createdAt ?? new Date(),
       updatedAt: params.updatedAt ?? new Date(),

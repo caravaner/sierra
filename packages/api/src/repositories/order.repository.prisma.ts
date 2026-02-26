@@ -104,6 +104,7 @@ export class PrismaOrderRepository implements OrderRepository {
       status: row.status,
       deliveryFee: Number(row.deliveryFee ?? 0),
       totalAmount: Number(row.totalAmount),
+      version: row.version,
       items: row.items.map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (i: any) =>

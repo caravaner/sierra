@@ -77,6 +77,7 @@ export class PrismaInventoryRepository implements InventoryRepository {
       quantityOnHand: row.quantityOnHand,
       quantityReserved: row.quantityReserved,
       reorderPoint: row.reorderPoint,
+      version: row.version,
       attributes: new AttributeBag(row.attributes ?? {}),
       updatedAt: row.updatedAt,
     });

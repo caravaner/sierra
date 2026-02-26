@@ -93,6 +93,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
       email: row.email ?? undefined,
       firstName: row.firstName,
       lastName: row.lastName,
+      version: row.version,
       addresses: row.addresses.map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (a: any) => ({

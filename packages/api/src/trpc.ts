@@ -34,7 +34,8 @@ const isAdmin = t.middleware(({ ctx, next }) => {
   if (!ctx.session?.user?.id) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  if (ctx.session.user.role !== "ADMIN") {
+  const role = ctx.session.user.role;
+  if (role !== "ADMIN" && role !== "SUPERADMIN") {
     throw new TRPCError({ code: "FORBIDDEN" });
   }
   return next({

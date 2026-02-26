@@ -91,6 +91,7 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
         zipCode: addr.zipCode,
         country: addr.country,
       },
+      version: row.version,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

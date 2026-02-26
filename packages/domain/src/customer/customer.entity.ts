@@ -24,6 +24,7 @@ interface CustomerProps {
   firstName: string;
   lastName: string;
   addresses: CustomerAddress[];
+  version: number;
   attributes: AttributeBag;
   createdAt: Date;
   updatedAt: Date;
@@ -50,6 +51,9 @@ export class Customer extends AggregateRoot<CustomerProps> {
   }
   get addresses() {
     return this.props.addresses;
+  }
+  get version() {
+    return this.props.version;
   }
   get defaultAddress() {
     return this.props.addresses.find((a) => a.isDefault) ?? null;
@@ -84,6 +88,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
       firstName: params.firstName,
       lastName: params.lastName,
       addresses: [],
+      version: -1,
       attributes: AttributeBag.empty(),
       createdAt: now,
       updatedAt: now,
@@ -108,6 +113,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
     firstName: string;
     lastName: string;
     addresses?: CustomerAddress[];
+    version?: number;
     attributes?: AttributeBag;
     createdAt?: Date;
     updatedAt?: Date;
@@ -119,6 +125,7 @@ export class Customer extends AggregateRoot<CustomerProps> {
       firstName: params.firstName,
       lastName: params.lastName,
       addresses: params.addresses ?? [],
+      version: params.version ?? 0,
       attributes: params.attributes ?? AttributeBag.empty(),
       createdAt: params.createdAt ?? new Date(),
       updatedAt: params.updatedAt ?? new Date(),

@@ -9,6 +9,7 @@ export type { AttributeType, Mapper } from "./shared/attribute-bag";
 export type { Principal } from "./shared/principal";
 export type { UnitOfWork, CommandMeta, UowRepository } from "./shared/unit-of-work";
 export type { Repository } from "./shared/repository.interface";
+export { ConcurrentModificationError } from "./shared/concurrent-modification.error";
 
 // Order
 export { Order } from "./order/order.entity";

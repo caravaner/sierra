@@ -85,6 +85,7 @@ export class PrismaProductRepository implements ProductRepository {
       category: row.category,
       images: row.images,
       isActive: row.isActive,
+      version: row.version,
       attributes: new AttributeBag(row.attributes ?? {}),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

@@ -4,6 +4,7 @@ import {
   OrderItem,
   ShippingAddress,
   AttributeBag,
+  ConcurrentModificationError,
   type OrderRepository,
   type UowRepository,
 } from "@sierra/domain";
@@ -16,10 +17,7 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
   ) {}
 
   async findById(id: string): Promise<Order | null> {
-    const row = await this.prisma.order.findUnique({
-      where: { id },
-      include: { items: true },
-    });
+    const row = await this.prisma.order.findUnique({ where: { id }, include: { items: true } });
     if (!row) return null;
     return this.toDomain(row);
   }
@@ -33,16 +31,10 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
     return rows.map((r) => this.toDomain(r));
   }
 
-  async findAll(params?: {
-    status?: string;
-    limit?: number;
-    offset?: number;
-  }): Promise<Order[]> {
+  async findAll(params?: { status?: string; limit?: number; offset?: number }): Promise<Order[]> {
     const rows = await this.prisma.order.findMany({
-      where: params?.status
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? { status: params.status as any }
-        : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: params?.status ? { status: params.status as any } : undefined,
       include: { items: true },
       take: params?.limit ?? 20,
       skip: params?.offset ?? 0,
@@ -53,10 +45,8 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
 
   async count(params?: { status?: string }): Promise<number> {
     return this.prisma.order.count({
-      where: params?.status
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? { status: params.status as any }
-        : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      where: params?.status ? { status: params.status as any } : undefined,
     });
   }
 
@@ -71,39 +61,46 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async saveWithTx(tx: any, entity: Order): Promise<Order> {
-    const row = await tx.order.upsert({
-      where: { id: entity.id },
-      create: {
-        id: entity.id,
-        customerId: entity.customerId,
-        subscriptionId: entity.subscriptionId,
-        status: entity.status.value,
-        shippingStreet: entity.shippingAddress.street,
-        shippingCity: entity.shippingAddress.city,
-        shippingState: entity.shippingAddress.state,
-        shippingZipCode: entity.shippingAddress.zipCode,
-        shippingCountry: entity.shippingAddress.country,
-        deliveryFee: entity.deliveryFee,
-        totalAmount: entity.totalAmount,
-        attributes: entity.attributes.toJSON(),
-        items: {
-          create: entity.items.map((item) => ({
-            productId: item.productId,
-            name: item.name,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-          })),
+    const data = {
+      status: entity.status.value,
+      deliveryFee: entity.deliveryFee,
+      totalAmount: entity.totalAmount,
+      attributes: entity.attributes.toJSON(),
+    };
+
+    if (entity.version < 0) {
+      await tx.order.create({
+        data: {
+          id: entity.id,
+          customerId: entity.customerId,
+          subscriptionId: entity.subscriptionId,
+          shippingStreet: entity.shippingAddress.street,
+          shippingCity: entity.shippingAddress.city,
+          shippingState: entity.shippingAddress.state,
+          shippingZipCode: entity.shippingAddress.zipCode,
+          shippingCountry: entity.shippingAddress.country,
+          version: 0,
+          createdAt: entity.createdAt,
+          ...data,
+          items: {
+            create: entity.items.map((item) => ({
+              productId: item.productId,
+              name: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+            })),
+          },
         },
-      },
-      update: {
-        status: entity.status.value,
-        deliveryFee: entity.deliveryFee,
-        totalAmount: entity.totalAmount,
-        attributes: entity.attributes.toJSON(),
-      },
-      include: { items: true },
-    });
-    return this.toDomain(row);
+      });
+    } else {
+      const result = await tx.order.updateMany({
+        where: { id: entity.id, version: entity.version },
+        data: { ...data, version: { increment: 1 } },
+      });
+      if (result.count === 0) throw new ConcurrentModificationError(entity.id);
+    }
+
+    return entity;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,15 +112,15 @@ export class UowOrderRepository implements OrderRepository, UowRepository<Order>
       status: row.status,
       deliveryFee: Number(row.deliveryFee ?? 0),
       totalAmount: Number(row.totalAmount),
-      items: row.items.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (i: any) =>
-          OrderItem.create({
-            productId: i.productId,
-            name: i.name,
-            quantity: i.quantity,
-            unitPrice: Number(i.unitPrice),
-          }),
+      version: row.version,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      items: row.items.map((i: any) =>
+        OrderItem.create({
+          productId: i.productId,
+          name: i.name,
+          quantity: i.quantity,
+          unitPrice: Number(i.unitPrice),
+        }),
       ),
       shippingAddress: ShippingAddress.create({
         street: row.shippingStreet,

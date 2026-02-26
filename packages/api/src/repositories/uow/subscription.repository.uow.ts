@@ -2,6 +2,7 @@ import type { PrismaClient } from "@sierra/db";
 import {
   Subscription,
   SubscriptionItem,
+  ConcurrentModificationError,
   type SubscriptionRepository,
   type SubscriptionStatusType,
   type UowRepository,
@@ -61,25 +62,33 @@ export class UowSubscriptionRepository implements SubscriptionRepository, UowRep
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async saveWithTx(tx: any, entity: Subscription): Promise<Subscription> {
-    const row = await tx.subscription.upsert({
-      where: { id: entity.id },
-      create: {
-        id: entity.id,
-        customerId: entity.customerId,
-        intervalDays: entity.intervalDays,
-        status: entity.status,
-        nextDeliveryAt: entity.nextDeliveryAt,
-        items: entity.items.map((i) => i.value),
-        shippingAddress: entity.shippingAddress,
-      },
-      update: {
-        status: entity.status,
-        nextDeliveryAt: entity.nextDeliveryAt,
-        items: entity.items.map((i) => i.value),
-        shippingAddress: entity.shippingAddress,
-      },
-    });
-    return this.toDomain(row);
+    const data = {
+      status: entity.status,
+      nextDeliveryAt: entity.nextDeliveryAt,
+      items: entity.items.map((i) => i.value) as object[],
+      shippingAddress: entity.shippingAddress as object,
+    };
+
+    if (entity.version < 0) {
+      await tx.subscription.create({
+        data: {
+          id: entity.id,
+          customerId: entity.customerId,
+          intervalDays: entity.intervalDays,
+          version: 0,
+          createdAt: entity.createdAt,
+          ...data,
+        },
+      });
+    } else {
+      const result = await tx.subscription.updateMany({
+        where: { id: entity.id, version: entity.version },
+        data: { ...data, version: { increment: 1 } },
+      });
+      if (result.count === 0) throw new ConcurrentModificationError(entity.id);
+    }
+
+    return entity;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,6 +111,7 @@ export class UowSubscriptionRepository implements SubscriptionRepository, UowRep
         zipCode: addr.zipCode,
         country: addr.country,
       },
+      version: row.version,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     });

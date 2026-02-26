@@ -2,6 +2,7 @@ import type { PrismaClient } from "@sierra/db";
 import {
   Customer,
   AttributeBag,
+  ConcurrentModificationError,
   type CustomerRepository,
   type UowRepository,
 } from "@sierra/domain";
@@ -14,28 +15,19 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
   ) {}
 
   async findById(id: string): Promise<Customer | null> {
-    const row = await this.prisma.customer.findUnique({
-      where: { id },
-      include: { addresses: true },
-    });
+    const row = await this.prisma.customer.findUnique({ where: { id }, include: { addresses: true } });
     if (!row) return null;
     return this.toDomain(row);
   }
 
   async findByUserId(userId: string): Promise<Customer | null> {
-    const row = await this.prisma.customer.findUnique({
-      where: { userId },
-      include: { addresses: true },
-    });
+    const row = await this.prisma.customer.findUnique({ where: { userId }, include: { addresses: true } });
     if (!row) return null;
     return this.toDomain(row);
   }
 
   async findByEmail(email: string): Promise<Customer | null> {
-    const row = await this.prisma.customer.findUnique({
-      where: { email },
-      include: { addresses: true },
-    });
+    const row = await this.prisma.customer.findUnique({ where: { email }, include: { addresses: true } });
     if (!row) return null;
     return this.toDomain(row);
   }
@@ -65,38 +57,44 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async saveWithTx(tx: any, entity: Customer): Promise<Customer> {
-    const row = await tx.customer.upsert({
-      where: { id: entity.id },
-      create: {
-        id: entity.id,
-        userId: entity.userId,
-        phone: entity.phone,
-        email: entity.email,
-        firstName: entity.firstName,
-        lastName: entity.lastName,
-        attributes: entity.attributes.toJSON(),
-        addresses: {
-          create: entity.addresses.map((a) => ({
-            id: a.id,
-            street: a.street,
-            city: a.city,
-            state: a.state,
-            zipCode: a.zipCode,
-            country: a.country,
-            isDefault: a.isDefault,
-          })),
+    const data = {
+      phone: entity.phone,
+      email: entity.email,
+      firstName: entity.firstName,
+      lastName: entity.lastName,
+      attributes: entity.attributes.toJSON(),
+    };
+
+    if (entity.version < 0) {
+      await tx.customer.create({
+        data: {
+          id: entity.id,
+          userId: entity.userId,
+          version: 0,
+          createdAt: entity.createdAt,
+          ...data,
+          addresses: {
+            create: entity.addresses.map((a) => ({
+              id: a.id,
+              street: a.street,
+              city: a.city,
+              state: a.state,
+              zipCode: a.zipCode,
+              country: a.country,
+              isDefault: a.isDefault,
+            })),
+          },
         },
-      },
-      update: {
-        phone: entity.phone,
-        email: entity.email,
-        firstName: entity.firstName,
-        lastName: entity.lastName,
-        attributes: entity.attributes.toJSON(),
-      },
-      include: { addresses: true },
-    });
-    return this.toDomain(row);
+      });
+    } else {
+      const result = await tx.customer.updateMany({
+        where: { id: entity.id, version: entity.version },
+        data: { ...data, version: { increment: 1 } },
+      });
+      if (result.count === 0) throw new ConcurrentModificationError(entity.id);
+    }
+
+    return entity;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -105,21 +103,20 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
       id: row.id,
       userId: row.userId,
       phone: row.phone,
-      email: row.email,
+      email: row.email ?? undefined,
       firstName: row.firstName,
       lastName: row.lastName,
-      addresses: row.addresses.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (a: any) => ({
-          id: a.id,
-          street: a.street,
-          city: a.city,
-          state: a.state,
-          zipCode: a.zipCode,
-          country: a.country,
-          isDefault: a.isDefault,
-        }),
-      ),
+      version: row.version,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      addresses: row.addresses.map((a: any) => ({
+        id: a.id,
+        street: a.street,
+        city: a.city,
+        state: a.state,
+        zipCode: a.zipCode,
+        country: a.country,
+        isDefault: a.isDefault,
+      })),
       attributes: new AttributeBag(row.attributes ?? {}),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

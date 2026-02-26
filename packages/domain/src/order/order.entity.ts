@@ -17,6 +17,7 @@ interface OrderProps {
   shippingAddress: ShippingAddress;
   deliveryFee: number;
   totalAmount: number;
+  version: number;
   attributes: AttributeBag;
   createdAt: Date;
   updatedAt: Date;
@@ -43,6 +44,9 @@ export class Order extends AggregateRoot<OrderProps> {
   }
   get totalAmount() {
     return this.props.totalAmount;
+  }
+  get version() {
+    return this.props.version;
   }
   get attributes() {
     return this.props.attributes;
@@ -83,6 +87,7 @@ export class Order extends AggregateRoot<OrderProps> {
       shippingAddress: params.shippingAddress,
       deliveryFee,
       totalAmount,
+      version: -1,
       attributes: AttributeBag.empty(),
       createdAt: now,
       updatedAt: now,
@@ -107,6 +112,7 @@ export class Order extends AggregateRoot<OrderProps> {
     status?: OrderStatusType;
     deliveryFee?: number;
     totalAmount?: number;
+    version?: number;
     attributes?: AttributeBag;
     createdAt?: Date;
     updatedAt?: Date;
@@ -124,6 +130,7 @@ export class Order extends AggregateRoot<OrderProps> {
       shippingAddress: params.shippingAddress,
       deliveryFee,
       totalAmount,
+      version: params.version ?? 0,
       attributes: params.attributes ?? AttributeBag.empty(),
       createdAt: params.createdAt ?? new Date(),
       updatedAt: params.updatedAt ?? new Date(),

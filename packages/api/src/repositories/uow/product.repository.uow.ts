@@ -2,6 +2,7 @@ import type { PrismaClient } from "@sierra/db";
 import {
   Product,
   AttributeBag,
+  ConcurrentModificationError,
   type ProductRepository,
   type UowRepository,
 } from "@sierra/domain";
@@ -63,30 +64,29 @@ export class UowProductRepository implements ProductRepository, UowRepository<Pr
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async saveWithTx(tx: any, entity: Product): Promise<Product> {
-    const row = await tx.product.upsert({
-      where: { id: entity.id },
-      create: {
-        id: entity.id,
-        name: entity.name,
-        description: entity.description,
-        price: entity.price,
-        sku: entity.sku,
-        category: entity.category,
-        images: entity.images,
-        isActive: entity.isActive,
-        attributes: entity.attributes.toJSON(),
-      },
-      update: {
-        name: entity.name,
-        description: entity.description,
-        price: entity.price,
-        category: entity.category,
-        images: entity.images,
-        isActive: entity.isActive,
-        attributes: entity.attributes.toJSON(),
-      },
-    });
-    return this.toDomain(row);
+    const data = {
+      name: entity.name,
+      description: entity.description,
+      price: entity.price,
+      category: entity.category,
+      images: entity.images,
+      isActive: entity.isActive,
+      attributes: entity.attributes.toJSON(),
+    };
+
+    if (entity.version < 0) {
+      await tx.product.create({
+        data: { id: entity.id, sku: entity.sku, version: 0, createdAt: entity.createdAt, ...data },
+      });
+    } else {
+      const result = await tx.product.updateMany({
+        where: { id: entity.id, version: entity.version },
+        data: { ...data, version: { increment: 1 } },
+      });
+      if (result.count === 0) throw new ConcurrentModificationError(entity.id);
+    }
+
+    return entity;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,6 +100,7 @@ export class UowProductRepository implements ProductRepository, UowRepository<Pr
       category: row.category,
       images: row.images,
       isActive: row.isActive,
+      version: row.version,
       attributes: new AttributeBag(row.attributes ?? {}),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,

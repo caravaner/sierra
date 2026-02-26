@@ -19,6 +19,7 @@ interface SubscriptionProps {
   nextDeliveryAt: Date;
   items: SubscriptionItem[];
   shippingAddress: SubscriptionShippingAddress;
+  version: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +31,7 @@ export class Subscription extends AggregateRoot<SubscriptionProps> {
   get nextDeliveryAt() { return this.props.nextDeliveryAt; }
   get items() { return this.props.items; }
   get shippingAddress() { return this.props.shippingAddress; }
+  get version() { return this.props.version; }
   get createdAt() { return this.props.createdAt; }
   get updatedAt() { return this.props.updatedAt; }
 
@@ -56,6 +58,7 @@ export class Subscription extends AggregateRoot<SubscriptionProps> {
       nextDeliveryAt: params.nextDeliveryAt,
       items: params.items,
       shippingAddress: params.shippingAddress,
+      version: -1,
       createdAt: now,
       updatedAt: now,
     };
@@ -78,6 +81,7 @@ export class Subscription extends AggregateRoot<SubscriptionProps> {
     nextDeliveryAt: Date;
     items: SubscriptionItem[];
     shippingAddress: SubscriptionShippingAddress;
+    version?: number;
     createdAt: Date;
     updatedAt: Date;
   }): Subscription {
@@ -88,6 +92,7 @@ export class Subscription extends AggregateRoot<SubscriptionProps> {
       nextDeliveryAt: params.nextDeliveryAt,
       items: params.items,
       shippingAddress: params.shippingAddress,
+      version: params.version ?? 0,
       createdAt: params.createdAt,
       updatedAt: params.updatedAt,
     });

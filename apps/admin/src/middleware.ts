@@ -9,7 +9,8 @@ const middleware: NextMiddleware = auth((req) => {
     return NextResponse.redirect(signInUrl);
   }
 
-  if (req.auth.user.role !== "ADMIN") {
+  const role = req.auth.user.role;
+  if (role !== "ADMIN" && role !== "SUPERADMIN") {
     return new NextResponse("Forbidden", { status: 403 });
   }
 

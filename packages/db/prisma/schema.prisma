@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  schemas  = ["main", "eventlog"]
 }
 
 // ─── Auth (NextAuth.js) ─────────────────────────────────────
@@ -12,6 +13,9 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  SUPERADMIN
+
+  @@schema("main")
 }
 
 model User {
@@ -34,6 +38,7 @@ model User {
   cart     Cart?
 
   @@map("users")
+  @@schema("main")
 }
 
 model Account {
@@ -55,6 +60,7 @@ model Account {
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
+  @@schema("main")
 }
 
 model Session {
@@ -67,6 +73,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")
+  @@schema("main")
 }
 
 model VerificationToken {
@@ -77,6 +84,7 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+  @@schema("main")
 }
 
 // ─── Customer ───────────────────────────────────────────────
@@ -88,6 +96,7 @@ model Customer {
   email      String?  @unique
   firstName  String   @map("first_name")
   lastName   String   @map("last_name")
+  version    Int      @default(0)
   attributes Json     @default("{}") @db.JsonB
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -99,6 +108,7 @@ model Customer {
   invoices      Invoice[]
 
   @@map("customers")
+  @@schema("main")
 }
 
 model Address {
@@ -115,6 +125,7 @@ model Address {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@map("addresses")
+  @@schema("main")
 }
 
 // ─── Product ────────────────────────────────────────────────
@@ -128,6 +139,7 @@ model Product {
   category    String?
   images      String[] @default([])
   isActive    Boolean  @default(true) @map("is_active")
+  version     Int      @default(0)
   attributes  Json     @default("{}") @db.JsonB
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -137,6 +149,7 @@ model Product {
   cartItems  CartItem[]
 
   @@map("products")
+  @@schema("main")
 }
 
 // ─── Inventory ──────────────────────────────────────────────
@@ -147,12 +160,14 @@ model InventoryItem {
   quantityOnHand   Int      @default(0) @map("quantity_on_hand")
   quantityReserved Int      @default(0) @map("quantity_reserved")
   reorderPoint     Int      @default(10) @map("reorder_point")
+  version          Int      @default(0)
   attributes       Json     @default("{}") @db.JsonB
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("inventory_items")
+  @@schema("main")
 }
 
 // ─── Store Settings ─────────────────────────────────────────
@@ -163,6 +178,7 @@ model StoreSettings {
   freeDeliveryFrom Decimal @default(10000) @db.Decimal(10, 2) @map("free_delivery_from")
 
   @@map("store_settings")
+  @@schema("main")
 }
 
 // ─── Order ──────────────────────────────────────────────────
@@ -174,18 +190,24 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+
+  @@schema("main")
 }
 
 enum SubscriptionStatus {
   ACTIVE
   PAUSED
   CANCELLED
+
+  @@schema("main")
 }
 
 enum InvoiceStatus {
   ISSUED
   PAID
   CANCELLED
+
+  @@schema("main")
 }
 
 model Order {
@@ -200,6 +222,7 @@ model Order {
   shippingCountry String      @default("US") @map("shipping_country")
   deliveryFee     Decimal     @default(0) @db.Decimal(10, 2) @map("delivery_fee")
   totalAmount     Decimal     @db.Decimal(10, 2) @map("total_amount")
+  version         Int         @default(0)
   attributes      Json        @default("{}") @db.JsonB
   createdAt       DateTime    @default(now()) @map("created_at")
   updatedAt       DateTime    @updatedAt @map("updated_at")
@@ -210,6 +233,7 @@ model Order {
   invoice      Invoice?
 
   @@map("orders")
+  @@schema("main")
 }
 
 model OrderItem {
@@ -225,6 +249,7 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
+  @@schema("main")
 }
 
 // ─── Subscription ───────────────────────────────────────────
@@ -237,6 +262,7 @@ model Subscription {
   nextDeliveryAt  DateTime           @map("next_delivery_at")
   items           Json
   shippingAddress Json               @map("shipping_address")
+  version         Int                @default(0)
   attributes      Json               @default("{}") @db.JsonB
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
@@ -245,6 +271,7 @@ model Subscription {
   orders   Order[]
 
   @@map("subscriptions")
+  @@schema("main")
 }
 
 // ─── Invoice ────────────────────────────────────────────────
@@ -267,6 +294,7 @@ model Invoice {
   customer Customer @relation(fields: [customerId], references: [id])
 
   @@map("invoices")
+  @@schema("main")
 }
 
 // ─── Cart ─────────────────────────────────────────────────
@@ -281,6 +309,7 @@ model Cart {
   items CartItem[]
 
   @@map("carts")
+  @@schema("main")
 }
 
 model CartItem {
@@ -294,9 +323,23 @@ model CartItem {
 
   @@unique([cartId, productId])
   @@map("cart_items")
+  @@schema("main")
 }
 
-// ─── Domain Events ──────────────────────────────────────────
+// ─── Outbox ───────────────────────────────────────────────────────────────────
+
+model Outbox {
+  id        String    @id @default(cuid())
+  payload   Json      @db.JsonB
+  createdAt DateTime  @default(now()) @map("created_at")
+  flushedAt DateTime? @map("flushed_at")
+
+  @@index([flushedAt])
+  @@map("outbox")
+  @@schema("main")
+}
+
+// ─── Event Log ────────────────────────────────────────────────────────────────
 
 model DomainEvent {
   id            String   @id @default(cuid())
@@ -316,4 +359,5 @@ model DomainEvent {
   @@index([aggregateType, eventType])
   @@index([occurredAt])
   @@map("domain_events")
+  @@schema("eventlog")
 }

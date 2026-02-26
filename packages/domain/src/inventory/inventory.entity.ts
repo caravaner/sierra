@@ -8,6 +8,7 @@ interface InventoryItemProps {
   quantityOnHand: number;
   quantityReserved: number;
   reorderPoint: number;
+  version: number;
   attributes: AttributeBag;
   updatedAt: Date;
 }
@@ -27,6 +28,9 @@ export class InventoryItem extends AggregateRoot<InventoryItemProps> {
   }
   get reorderPoint() {
     return this.props.reorderPoint;
+  }
+  get version() {
+    return this.props.version;
   }
   get needsReorder() {
     return this.quantityAvailable <= this.props.reorderPoint;
@@ -54,6 +58,7 @@ export class InventoryItem extends AggregateRoot<InventoryItemProps> {
       quantityOnHand: params.quantityOnHand ?? 0,
       quantityReserved: params.quantityReserved ?? 0,
       reorderPoint: params.reorderPoint ?? 10,
+      version: -1,
       attributes: AttributeBag.empty(),
       updatedAt: new Date(),
     });
@@ -65,6 +70,7 @@ export class InventoryItem extends AggregateRoot<InventoryItemProps> {
     quantityOnHand?: number;
     quantityReserved?: number;
     reorderPoint?: number;
+    version?: number;
     attributes?: AttributeBag;
     updatedAt?: Date;
   }): InventoryItem {
@@ -73,6 +79,7 @@ export class InventoryItem extends AggregateRoot<InventoryItemProps> {
       quantityOnHand: params.quantityOnHand ?? 0,
       quantityReserved: params.quantityReserved ?? 0,
       reorderPoint: params.reorderPoint ?? 10,
+      version: params.version ?? 0,
       attributes: params.attributes ?? AttributeBag.empty(),
       updatedAt: params.updatedAt ?? new Date(),
     });
