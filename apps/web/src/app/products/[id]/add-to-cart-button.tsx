@@ -27,29 +27,29 @@ export function AddToCartButton({ productId, name, price, image }: AddToCartButt
 
   return (
     <div className="mt-8 flex items-center gap-3">
-      <div className="flex items-center rounded-md border">
+      <div className="flex items-center rounded-full border px-1">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-r-none"
+          className="h-9 w-9 rounded-full"
           onClick={() => setQuantity((q) => Math.max(1, q - 1))}
         >
-          <Minus className="h-3 w-3" />
+          <Minus className="h-3.5 w-3.5" />
         </Button>
-        <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+        <span className="w-10 text-center font-semibold">{quantity}</span>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-10 w-10 rounded-l-none"
+          className="h-9 w-9 rounded-full"
           onClick={() => setQuantity((q) => Math.min(99, q + 1))}
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
 
-      <Button onClick={handleAddToCart} size="lg" className="flex-1">
+      <Button onClick={handleAddToCart} size="lg" className="flex-1 rounded-full font-semibold">
         {added ? (
           <>
             <Check className="h-4 w-4" />

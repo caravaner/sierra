@@ -68,6 +68,23 @@ export const orderRouter = router({
       { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress, deliveryFee },
     );
 
+    // Store payment method and create verification record for bank transfers
+    await ctx.prisma.order.update({
+      where: { id: result.id },
+      data: { paymentMethod: input.paymentMethod },
+    });
+
+    if (input.paymentMethod === "BANK_TRANSFER") {
+      const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+      await ctx.prisma.paymentVerification.create({
+        data: {
+          orderId: result.id,
+          customerId: customer.id,
+          amount: subtotal + deliveryFee,
+        },
+      });
+    }
+
     if (customer.email) {
       const shippingAddress = [
         input.shippingAddress.street,

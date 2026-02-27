@@ -11,6 +11,7 @@ export const orderItemSchema = z.object({
 export const placeOrderSchema = z.object({
   items: z.array(orderItemSchema).min(1, "At least one item is required"),
   shippingAddress: addressSchema,
+  paymentMethod: z.enum(["BANK_TRANSFER", "ONLINE"]).default("BANK_TRANSFER"),
 });
 
 export const updateOrderStatusSchema = z.object({

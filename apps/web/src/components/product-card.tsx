@@ -3,20 +3,23 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/cart-context";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@sierra/shared";
+import { formatCurrency, formatPackSize } from "@sierra/shared";
 import { Minus, Plus, ShoppingCart, Check } from "lucide-react";
+import Link from "next/link";
 
 interface ProductCardProps {
   id: string;
   name: string;
   price: number;
-  category: string | null;
   images: string[];
+  brand?: { name: string; slug: string } | null;
+  productType?: { name: string } | null;
+  volumeMl?: number | null;
+  unitsPerPack?: number;
 }
 
-export function ProductCard({ id, name, price, category, images }: ProductCardProps) {
+export function ProductCard({ id, name, price, images, brand, productType, volumeMl, unitsPerPack = 1 }: ProductCardProps) {
   const { addItem } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -30,47 +33,52 @@ export function ProductCard({ id, name, price, category, images }: ProductCardPr
   }
 
   return (
-    <div className="group flex flex-col rounded-lg border bg-card transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-      <a href={`/products/${id}`} className="overflow-hidden rounded-t-lg bg-muted">
+    <div className="group flex flex-col rounded-2xl bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <Link href={`/products/${id}`} className="overflow-hidden rounded-t-2xl bg-muted">
         <img
           src={images[0] ?? "/images/placeholder.svg"}
           alt={name}
-          className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-      </a>
+      </Link>
 
-      <div className="flex flex-1 flex-col p-4">
-        {/* Reserve a fixed-height row so names align whether or not a badge is present */}
-        <div className="mb-2 h-5">
-          {category && (
-            <Badge variant="secondary" className="w-fit text-xs">
-              {category}
-            </Badge>
-          )}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/70">
+          {brand && <Link href={`/brands/${brand.slug}`} className="hover:text-primary">{brand.name}</Link>}
+          {brand && productType && <span>·</span>}
+          {productType && <span>{productType.name}</span>}
         </div>
-        <a href={`/products/${id}`} className="hover:underline">
-          <h2 className="line-clamp-2 font-semibold leading-snug">{name}</h2>
-        </a>
-        {/* mt-auto pushes price + CTA to the bottom of every card in the row */}
-        <p className="mt-auto pt-3 text-lg font-bold">{formatCurrency(price)}</p>
+        {volumeMl && (
+          <p className="mb-1 font-mono text-sm font-semibold text-foreground/80">
+            {formatPackSize(volumeMl, unitsPerPack)}
+          </p>
+        )}
 
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex items-center rounded-md border">
+        <Link href={`/products/${id}`} className="mb-auto">
+          <h2 className="line-clamp-2 font-semibold leading-snug tracking-tight hover:text-primary transition-colors">
+            {name}
+          </h2>
+        </Link>
+
+        <p className="mt-3 text-xl font-bold text-primary">{formatCurrency(price)}</p>
+
+        <div className="mt-4 flex items-center gap-2">
+          <div className="flex items-center rounded-full border px-1">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-r-none"
+              className="h-7 w-7 rounded-full"
               onClick={() => setQty((q) => Math.max(1, q - 1))}
             >
               <Minus className="h-3 w-3" />
             </Button>
-            <span className="w-8 text-center text-sm font-medium">{qty}</span>
+            <span className="w-7 text-center text-sm font-semibold">{qty}</span>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-8 w-8 rounded-l-none"
+              className="h-7 w-7 rounded-full"
               onClick={() => setQty((q) => Math.min(99, q + 1))}
             >
               <Plus className="h-3 w-3" />
@@ -79,19 +87,18 @@ export function ProductCard({ id, name, price, category, images }: ProductCardPr
 
           <Button
             size="sm"
-            className="h-8 w-8 text-xs sm:w-auto sm:flex-1"
+            className="h-9 flex-1 rounded-full text-xs font-semibold"
             onClick={handleAdd}
-            title="Add to cart"
           >
             {added ? (
               <>
-                <Check className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Added!</span>
+                <Check className="mr-1.5 h-3.5 w-3.5" />
+                Added!
               </>
             ) : (
               <>
-                <ShoppingCart className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Add to Cart</span>
+                <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+                Add to Cart
               </>
             )}
           </Button>

@@ -4,7 +4,8 @@ import { uploadFile, UploadError } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session?.user || (role !== "ADMIN" && role !== "SUPERADMIN")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

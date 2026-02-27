@@ -170,7 +170,7 @@ export function AddressPicker({ onAddressSelect, defaultValue }: AddressPickerPr
     return (
       <div className="space-y-4">
         {MAPS_API_KEY && (
-          <p className="text-sm text-gray-500">Loading map...</p>
+          <p className="text-sm text-muted-foreground">Loading map...</p>
         )}
         <AddressFormFields fields={fields} onChange={handleFieldChange} />
       </div>

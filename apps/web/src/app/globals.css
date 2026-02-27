@@ -5,11 +5,11 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 204 30% 10%;
+    --foreground: 204 60% 18%;
     --card: 0 0% 100%;
-    --card-foreground: 204 30% 10%;
+    --card-foreground: 204 60% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 204 30% 10%;
+    --popover-foreground: 204 60% 18%;
     --primary: 204 82% 38%;
     --primary-foreground: 0 0% 98%;
     --secondary: 204 50% 95%;
@@ -50,6 +50,9 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   * {
     @apply border-border;
   }

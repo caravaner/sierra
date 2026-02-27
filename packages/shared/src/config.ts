@@ -1,1 +1,1 @@
-export const APP_NAME = "Unbranded";
+export const APP_NAME = "Wata.ng";

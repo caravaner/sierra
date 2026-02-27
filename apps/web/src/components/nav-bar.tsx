@@ -27,7 +27,7 @@ export function NavBar() {
 
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="sm" className={navClass("/products")} asChild>
-            <Link href="/products">Products</Link>
+            <Link href="/#products">Products</Link>
           </Button>
 
           <Button variant="ghost" size="sm" className={`relative ${navClass("/cart")}`} asChild>

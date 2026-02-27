@@ -11,6 +11,8 @@ import { invoiceRouter } from "./routers/invoice.router";
 import { dashboardRouter } from "./routers/dashboard.router";
 import { userRouter } from "./routers/user.router";
 import { notificationRouter } from "./routers/notification.router";
+import { paymentRouter } from "./routers/payment.router";
+import { brandRouter, productTypeRouter } from "./routers/brand.router";
 
 export const appRouter = router({
   product: productRouter,
@@ -25,6 +27,9 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   user: userRouter,
   notification: notificationRouter,
+  payment: paymentRouter,
+  brand: brandRouter,
+  productType: productTypeRouter,
 });
 
 export type AppRouter = typeof appRouter;

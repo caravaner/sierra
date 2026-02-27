@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
-import { formatCurrency } from "@sierra/shared";
+import { formatCurrency, formatPackSize } from "@sierra/shared";
 import { AddToCartButton } from "./add-to-cart-button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 export default async function ProductDetailPage({
   params,
@@ -13,13 +12,15 @@ export default async function ProductDetailPage({
   const caller = await api();
   const product = await caller.product.byId({ id: params.id });
 
-  if (!product) {
-    notFound();
-  }
+  if (!product) notFound();
+
+  const packLabel = product.volumeMl
+    ? formatPackSize(product.volumeMl, product.unitsPerPack)
+    : null;
 
   return (
     <div className="grid gap-12 md:grid-cols-2">
-      <div className="overflow-hidden rounded-xl bg-muted">
+      <div className="overflow-hidden rounded-3xl bg-muted shadow-sm">
         <img
           src={product.images[0] ?? "/images/placeholder.svg"}
           alt={product.name}
@@ -27,14 +28,31 @@ export default async function ProductDetailPage({
         />
       </div>
 
-      <div className="flex flex-col">
-        <Badge variant="secondary" className="mb-3 w-fit">{product.category}</Badge>
-        <h1 className="text-3xl font-bold tracking-tight">{product.name}</h1>
-        <p className="mt-4 text-3xl font-bold">{formatCurrency(product.price)}</p>
+      <div className="flex flex-col justify-center">
+        {/* Brand + type breadcrumb */}
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/70">
+          {product.brand && (
+            <Link href={`/brands/${product.brand.slug}`} className="hover:text-primary">
+              {product.brand.name}
+            </Link>
+          )}
+          {product.brand && product.productType && <span>·</span>}
+          {product.productType && <span>{product.productType.name}</span>}
+        </div>
 
-        <Separator className="my-6" />
+        <h1 className="text-4xl font-bold tracking-tight">{product.name}</h1>
 
-        <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+        {packLabel && (
+          <p className="mt-2 font-mono text-lg font-semibold text-foreground/70">{packLabel}</p>
+        )}
+
+        <p className="mt-4 text-4xl font-bold text-primary">{formatCurrency(Number(product.price))}</p>
+
+        <div className="my-8 h-px bg-border" />
+
+        {product.description && (
+          <p className="leading-relaxed text-muted-foreground">{product.description}</p>
+        )}
 
         <AddToCartButton
           productId={product.id}

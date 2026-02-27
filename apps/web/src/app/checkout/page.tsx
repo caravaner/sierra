@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { useCart } from "@/lib/cart-context";
 import { AddressPicker } from "@/components/address-picker";
@@ -13,9 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
+import { Plus, Landmark, CreditCard } from "lucide-react";
 
 const ADDRESS_STORAGE_KEY = "sierra-checkout-address";
+const PENDING_ORDER_KEY = "sierra-pending-order";
 
 interface AddressFields {
   street: string;
@@ -34,18 +34,18 @@ function loadSavedAddress(): AddressFields | null {
   }
 }
 
-function persistAddress(address: AddressFields) {
-  try {
-    localStorage.setItem(ADDRESS_STORAGE_KEY, JSON.stringify(address));
-  } catch {
-    // storage unavailable — silently ignore
-  }
-}
+export type PendingOrder = {
+  address: AddressFields;
+  paymentMethod: "BANK_TRANSFER" | "ONLINE";
+  name?: string;
+  phone?: string;
+  email?: string;
+};
 
 export default function CheckoutPage() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
-  const { items, total, clearCart } = useCart();
+  const { items, total } = useCart();
 
   const customerQuery = trpc.customer.me.useQuery(undefined, {
     enabled: sessionStatus === "authenticated",
@@ -56,34 +56,30 @@ export default function CheckoutPage() {
   const deliveryConfigQuery = trpc.settings.deliveryConfig.useQuery();
   const syncCustomer = trpc.customer.sync.useMutation();
   const addAddress = trpc.customer.addAddress.useMutation();
-  const placeOrder = trpc.order.place.useMutation();
 
   const [selectedAddressId, setSelectedAddressId] = useState<string | "new">("new");
-  // localAddress: the address card shown from the last order (localStorage)
   const [localAddress, setLocalAddress] = useState<AddressFields | null>(null);
-  // useLocalAddress: true = ship to the card, false = show the form for a different address
   const [useLocalAddress, setUseLocalAddress] = useState(true);
   const [newAddress, setNewAddress] = useState<AddressFields>({
     street: "",
     city: "",
     state: "",
     zipCode: "",
-    country: "US",
+    country: "NG",
   });
   const [saveAddress, setSaveAddress] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"BANK_TRANSFER" | "ONLINE">("BANK_TRANSFER");
   const [error, setError] = useState("");
-  const [placing, setPlacing] = useState(false);
+  const [proceeding, setProceeding] = useState(false);
 
-  // Load persisted address from localStorage on mount
   useEffect(() => {
     const saved = loadSavedAddress();
     if (saved) setLocalAddress(saved);
   }, []);
 
-  // Auto-select default saved address when addresses load
   useEffect(() => {
     const addresses = addressesQuery.data?.addresses;
     if (addresses && addresses.length > 0) {
@@ -132,16 +128,16 @@ export default function CheckoutPage() {
   const deliveryFee = total >= deliveryConfig.freeDeliveryFrom ? 0 : deliveryConfig.deliveryFee;
   const orderTotal = total + deliveryFee;
 
-  async function handlePlaceOrder() {
+  async function handleContinue() {
     setError("");
-    setPlacing(true);
+    setProceeding(true);
 
     try {
       if (needsProfile) {
         const trimmedName = name.trim();
         if (!trimmedName || !phone) {
           setError("Please fill in your name and phone number.");
-          setPlacing(false);
+          setProceeding(false);
           return;
         }
         const parts = trimmedName.split(/\s+/);
@@ -169,7 +165,7 @@ export default function CheckoutPage() {
       } else {
         if (!newAddress.street || !newAddress.city || !newAddress.state || !newAddress.zipCode) {
           setError("Please fill in all address fields.");
-          setPlacing(false);
+          setProceeding(false);
           return;
         }
         shippingAddress = newAddress;
@@ -178,26 +174,22 @@ export default function CheckoutPage() {
         }
       }
 
-      await placeOrder.mutateAsync({
-        items: items.map((i) => ({
-          productId: i.productId,
-          name: i.name,
-          quantity: i.quantity,
-          unitPrice: i.price,
-        })),
-        shippingAddress,
-      });
+      // Persist pending order details for the payment page
+      const pendingOrder: PendingOrder = {
+        address: shippingAddress,
+        paymentMethod,
+        name: needsProfile ? name : undefined,
+        phone: needsProfile ? phone : undefined,
+        email: needsProfile ? email : undefined,
+      };
+      sessionStorage.setItem(PENDING_ORDER_KEY, JSON.stringify(pendingOrder));
 
-      persistAddress(shippingAddress);
-      clearCart();
-      toast.success("Order placed successfully!");
-      router.push("/checkout/success");
+      router.push("/checkout/payment");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to place order.";
+      const message = err instanceof Error ? err.message : "Something went wrong.";
       setError(message);
-      toast.error(message);
     } finally {
-      setPlacing(false);
+      setProceeding(false);
     }
   }
 
@@ -226,7 +218,7 @@ export default function CheckoutPage() {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+1 555 000 0000"
+                    placeholder="+234 800 000 0000"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                   />
@@ -348,6 +340,62 @@ export default function CheckoutPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Payment Method Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Method</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <label
+                className={`flex cursor-pointer items-start gap-4 rounded-xl border p-4 transition-colors hover:bg-muted/40 ${
+                  paymentMethod === "BANK_TRANSFER" ? "border-primary bg-primary/5" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "BANK_TRANSFER"}
+                  onChange={() => setPaymentMethod("BANK_TRANSFER")}
+                  className="mt-1"
+                />
+                <div className="flex flex-1 items-start gap-3">
+                  <Landmark className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="font-semibold">Bank Transfer</p>
+                    <p className="text-sm text-muted-foreground">
+                      Send payment directly to our bank account. We&apos;ll confirm and process
+                      your order once payment is received.
+                    </p>
+                  </div>
+                </div>
+              </label>
+
+              <label
+                className={`flex cursor-pointer items-start gap-4 rounded-xl border p-4 transition-colors hover:bg-muted/40 ${
+                  paymentMethod === "ONLINE" ? "border-primary bg-primary/5" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "ONLINE"}
+                  onChange={() => setPaymentMethod("ONLINE")}
+                  className="mt-1"
+                />
+                <div className="flex flex-1 items-start gap-3">
+                  <CreditCard className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="font-semibold">Pay Online</p>
+                    <p className="text-sm text-muted-foreground">
+                      Pay securely with your card or bank via Paystack. Your order is confirmed
+                      instantly.
+                    </p>
+                  </div>
+                </div>
+              </label>
+            </CardContent>
+          </Card>
         </div>
 
         <div>
@@ -391,7 +439,7 @@ export default function CheckoutPage() {
 
               <div className="flex justify-between font-semibold">
                 <span>Total</span>
-                <span>{formatCurrency(orderTotal)}</span>
+                <span className="text-primary">{formatCurrency(orderTotal)}</span>
               </div>
 
               {error && (
@@ -401,12 +449,12 @@ export default function CheckoutPage() {
               )}
 
               <Button
-                onClick={handlePlaceOrder}
-                disabled={placing}
-                className="mt-2 w-full"
+                onClick={handleContinue}
+                disabled={proceeding}
+                className="mt-2 w-full rounded-full"
                 size="lg"
               >
-                {placing ? "Placing order..." : "Place Order"}
+                {proceeding ? "Saving..." : "Continue to Payment →"}
               </Button>
             </CardContent>
           </Card>

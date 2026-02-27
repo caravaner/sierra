@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#1171b0",
 };
 
 function Providers({ children }: { children: React.ReactNode }) {

@@ -15,7 +15,48 @@ export async function uploadFile(file: File): Promise<string> {
   }
 
   const mode = process.env.STORAGE_MODE ?? "local";
-  return mode === "gcs" ? uploadToGCS(file) : uploadLocal(file);
+  if (mode === "r2") return uploadToR2(file);
+  if (mode === "gcs") return uploadToGCS(file);
+  return uploadLocal(file);
+}
+
+// ─── R2 (Cloudflare) ──────────────────────────────────────────────────────────
+
+async function uploadToR2(file: File): Promise<string> {
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const bucket = process.env.R2_BUCKET;
+  const publicUrl = process.env.R2_PUBLIC_URL;
+
+  if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) {
+    throw new UploadError(
+      "R2 is not fully configured. Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL."
+    );
+  }
+
+  const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
+
+  const client = new S3Client({
+    region: "auto",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId, secretAccessKey },
+  });
+
+  const key = `products/${uniqueFilename(file.name)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+      CacheControl: "public, max-age=31536000, immutable",
+    })
+  );
+
+  return `${publicUrl.replace(/\/$/, "")}/${key}`;
 }
 
 // ─── Local ────────────────────────────────────────────────────────────────────
@@ -43,7 +84,7 @@ async function uploadToGCS(file: File): Promise<string> {
 
   const credentials = process.env.STORAGE_GCS_CREDENTIALS
     ? JSON.parse(Buffer.from(process.env.STORAGE_GCS_CREDENTIALS, "base64").toString("utf8"))
-    : undefined; // falls back to Application Default Credentials on GCP infra
+    : undefined;
 
   const storage = new Storage({ credentials });
 
