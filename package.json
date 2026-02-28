@@ -1,6 +1,9 @@
 {
   "name": "sierra",
   "private": true,
+  "prisma": {
+    "schema": "packages/db/prisma/schema.prisma"
+  },
   "scripts": {
     "build": "turbo build",
     "start": "turbo start",
