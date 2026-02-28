@@ -3,7 +3,48 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "public/sw.js", "public/workbox-*.js"]
+      "outputs": ["dist/**", ".next/**", "public/sw.js", "public/workbox-*.js"],
+      "env": [
+        "NODE_ENV",
+
+        "DATABASE_URL",
+        "DIRECT_URL",
+
+        "AUTH_SECRET",
+        "NEXTAUTH_SECRET",
+        "NEXTAUTH_URL",
+        "AUTH_COOKIE_NAME",
+
+        "APP_URL",
+
+        "EMAIL_PROVIDER",
+        "RESEND_API_KEY",
+        "RESEND_FROM_EMAIL",
+
+        "PUSH_PROVIDER",
+        "VAPID_PUBLIC_KEY",
+        "VAPID_PRIVATE_KEY",
+        "VAPID_SUBJECT",
+
+        "CRON_SECRET",
+
+        "NEXT_PUBLIC_WEB_URL",
+        "NEXT_PUBLIC_ADMIN_URL",
+        "NEXT_PUBLIC_BANK_NAME",
+        "NEXT_PUBLIC_BANK_ACCOUNT_NAME",
+        "NEXT_PUBLIC_BANK_ACCOUNT_NUMBER",
+        "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+
+        "STORAGE_MODE",
+        "STORAGE_GCS_BUCKET",
+        "STORAGE_GCS_CREDENTIALS",
+
+        "PAYSTACK_SECRET_KEY",
+        "PAYSTACK_PUBLIC_KEY",
+        "PAYSTACK_WEBHOOK_SECRET",
+
+        "LOG_LEVEL"
+      ]
     },
     "start": {
       "dependsOn": ["build"],
