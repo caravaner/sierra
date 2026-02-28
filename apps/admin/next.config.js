@@ -7,7 +7,7 @@ const nextConfig = {
     // Ensures shared workspace packages are included in the standalone bundle
     outputFileTracingRoot: path.join(__dirname, "../../"),
   },
-  transpilePackages: ["@sierra/api", "@sierra/db", "@sierra/domain", "@sierra/shared"],
+  transpilePackages: ["@sierra/api", "@sierra/auth", "@sierra/db", "@sierra/domain", "@sierra/logger", "@sierra/notifications", "@sierra/shared"],
 };
 
 module.exports = nextConfig;
