@@ -49,7 +49,7 @@ export default function SubscriptionsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {data.items.map((sub) => (
+          {data?.items.map((sub) => (
             <Card key={sub.id}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between gap-4">
