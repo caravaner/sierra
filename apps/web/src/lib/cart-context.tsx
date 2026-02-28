@@ -53,12 +53,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = status === "authenticated";
   const prevAuth = useRef(false);
 
-  const [localItems, setLocalItems] = useState<CartItem[]>([]);
-
-  // Initialize local cart from localStorage
-  useEffect(() => {
-    setLocalItems(readLocalCart());
-  }, []);
+  // Lazy-initialize from localStorage to avoid overwriting items before they're loaded
+  const [localItems, setLocalItems] = useState<CartItem[]>(readLocalCart);
 
   // Persist local cart changes
   useEffect(() => {

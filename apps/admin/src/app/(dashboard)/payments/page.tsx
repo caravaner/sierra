@@ -31,6 +31,7 @@ function statusBadge(status: string) {
 
 export default function PaymentsPage() {
   const [filter, setFilter] = useState<FilterStatus>(undefined);
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; orderId: string; amount: number } | null>(null);
   const [denyTarget, setDenyTarget] = useState<{ id: string; orderId: string } | null>(null);
   const [denyNote, setDenyNote] = useState("");
   const [actioning, setActioning] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export default function PaymentsPage() {
     try {
       await confirm.mutateAsync({ id });
       toast.success("Payment confirmed — order updated to CONFIRMED.");
+      setConfirmTarget(null);
       void refetch();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to confirm payment.");
@@ -150,7 +152,7 @@ export default function PaymentsPage() {
                           variant="outline"
                           className="text-green-700 border-green-300 hover:bg-green-50"
                           disabled={actioning === v.id}
-                          onClick={() => handleConfirm(v.id)}
+                          onClick={() => setConfirmTarget({ id: v.id, orderId: v.orderId, amount: v.amount })}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Confirm
@@ -187,6 +189,33 @@ export default function PaymentsPage() {
           </Table>
         )}
       </Card>
+
+      {/* Confirm dialog */}
+      <Dialog open={!!confirmTarget} onOpenChange={(open) => !open && setConfirmTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Payment</DialogTitle>
+            <DialogDescription>
+              Order #{confirmTarget?.orderId.slice(0, 8).toUpperCase()} &mdash;{" "}
+              {formatCurrency(confirmTarget?.amount ?? 0)}. This will mark the order as{" "}
+              <strong>CONFIRMED</strong> and notify the customer.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-green-700 hover:bg-green-800 text-white"
+              disabled={!!actioning}
+              onClick={() => confirmTarget && handleConfirm(confirmTarget.id)}
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Yes, Confirm Payment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Deny dialog */}
       <Dialog open={!!denyTarget} onOpenChange={(open) => !open && setDenyTarget(null)}>

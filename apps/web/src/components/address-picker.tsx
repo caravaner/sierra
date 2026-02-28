@@ -16,8 +16,6 @@ interface AddressFields {
   street: string;
   city: string;
   state: string;
-  zipCode: string;
-  country: string;
 }
 
 interface AddressPickerProps {
@@ -33,8 +31,6 @@ function parsePlace(place: google.maps.places.PlaceResult): AddressFields {
   let street = "";
   let city = "";
   let state = "";
-  let zipCode = "";
-  let country = "";
 
   for (const c of components) {
     const types = c.types;
@@ -46,14 +42,10 @@ function parsePlace(place: google.maps.places.PlaceResult): AddressFields {
       city = c.long_name;
     } else if (types.includes("administrative_area_level_1")) {
       state = c.short_name;
-    } else if (types.includes("postal_code")) {
-      zipCode = c.long_name;
-    } else if (types.includes("country")) {
-      country = c.short_name;
     }
   }
 
-  return { street: street.trim(), city, state, zipCode, country: country || "US" };
+  return { street: street.trim(), city, state };
 }
 
 function AddressFormFields({
@@ -89,22 +81,6 @@ function AddressFormFields({
           onChange={(e) => onChange("state", e.target.value)}
         />
       </div>
-      <div className="space-y-2">
-        <Label>Zip Code</Label>
-        <Input
-          type="text"
-          value={fields.zipCode}
-          onChange={(e) => onChange("zipCode", e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>Country</Label>
-        <Input
-          type="text"
-          value={fields.country}
-          onChange={(e) => onChange("country", e.target.value)}
-        />
-      </div>
     </div>
   );
 }
@@ -116,7 +92,7 @@ export function AddressPicker({ onAddressSelect, defaultValue }: AddressPickerPr
   });
 
   const [fields, setFields] = useState<AddressFields>(
-    defaultValue ?? { street: "", city: "", state: "", zipCode: "", country: "US" },
+    defaultValue ?? { street: "", city: "", state: "" },
   );
   const [markerPos, setMarkerPos] = useState(defaultCenter);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);

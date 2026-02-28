@@ -88,8 +88,6 @@ export class PrismaSubscriptionRepository implements SubscriptionRepository {
         street: addr.street,
         city: addr.city,
         state: addr.state,
-        zipCode: addr.zipCode,
-        country: addr.country,
       },
       version: row.version,
       createdAt: row.createdAt,

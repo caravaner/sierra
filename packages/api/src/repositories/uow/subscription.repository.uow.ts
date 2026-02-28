@@ -108,8 +108,6 @@ export class UowSubscriptionRepository implements SubscriptionRepository, UowRep
         street: addr.street,
         city: addr.city,
         state: addr.state,
-        zipCode: addr.zipCode,
-        country: addr.country,
       },
       version: row.version,
       createdAt: row.createdAt,

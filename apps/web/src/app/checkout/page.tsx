@@ -21,8 +21,6 @@ interface AddressFields {
   street: string;
   city: string;
   state: string;
-  zipCode: string;
-  country: string;
 }
 
 function loadSavedAddress(): AddressFields | null {
@@ -64,8 +62,6 @@ export default function CheckoutPage() {
     street: "",
     city: "",
     state: "",
-    zipCode: "",
-    country: "NG",
   });
   const [saveAddress, setSaveAddress] = useState(false);
   const [name, setName] = useState("");
@@ -122,7 +118,9 @@ export default function CheckoutPage() {
   }
 
   const savedAddresses = addressesQuery.data?.addresses ?? [];
-  const needsProfile = !customerQuery.data;
+  // Only show the profile form once the query has settled and returned no data.
+  // Using isFetched avoids flashing the form while the query is in flight.
+  const needsProfile = customerQuery.isFetched && !customerQuery.data;
   const selectedSaved = savedAddresses.find((a) => a.id === selectedAddressId);
   const deliveryConfig = deliveryConfigQuery.data ?? { deliveryFee: 500, freeDeliveryFrom: 10000 };
   const deliveryFee = total >= deliveryConfig.freeDeliveryFrom ? 0 : deliveryConfig.deliveryFee;
@@ -157,13 +155,11 @@ export default function CheckoutPage() {
           street: selectedSaved.street,
           city: selectedSaved.city,
           state: selectedSaved.state,
-          zipCode: selectedSaved.zipCode,
-          country: selectedSaved.country,
         };
       } else if (useLocalAddress && localAddress) {
         shippingAddress = localAddress;
       } else {
-        if (!newAddress.street || !newAddress.city || !newAddress.state || !newAddress.zipCode) {
+        if (!newAddress.street || !newAddress.city || !newAddress.state) {
           setError("Please fill in all address fields.");
           setProceeding(false);
           return;
@@ -263,9 +259,8 @@ export default function CheckoutPage() {
                       <div className="text-sm">
                         <p className="font-medium">{addr.street}</p>
                         <p className="text-muted-foreground">
-                          {addr.city}, {addr.state} {addr.zipCode}
+                          {addr.city}, {addr.state}
                         </p>
-                        <p className="text-muted-foreground">{addr.country}</p>
                       </div>
                     </label>
                   ))}
@@ -291,9 +286,8 @@ export default function CheckoutPage() {
                       </p>
                       <p className="text-sm font-medium">{localAddress.street}</p>
                       <p className="text-sm text-muted-foreground">
-                        {localAddress.city}, {localAddress.state} {localAddress.zipCode}
+                        {localAddress.city}, {localAddress.state}
                       </p>
-                      <p className="text-sm text-muted-foreground">{localAddress.country}</p>
                       <button
                         type="button"
                         onClick={() => setUseLocalAddress(false)}

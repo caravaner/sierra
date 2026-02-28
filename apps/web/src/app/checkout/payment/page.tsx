@@ -153,8 +153,7 @@ export default function CheckoutPaymentPage() {
             </p>
             <p className="text-sm font-medium">{pendingOrder.address.street}</p>
             <p className="text-sm text-muted-foreground">
-              {pendingOrder.address.city}, {pendingOrder.address.state}{" "}
-              {pendingOrder.address.zipCode}
+              {pendingOrder.address.city}, {pendingOrder.address.state}
             </p>
           </CardContent>
         </Card>

@@ -63,8 +63,6 @@ export const customerRouter = router({
         street: z.string().min(1).optional(),
         city: z.string().min(1).optional(),
         state: z.string().min(1).optional(),
-        zipCode: z.string().min(1).optional(),
-        country: z.string().optional(),
         isDefault: z.boolean().optional(),
       }),
     )

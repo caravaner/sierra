@@ -74,8 +74,6 @@ export interface ShippingAddressProps {
   street: string;
   city: string;
   state: string;
-  zipCode: string;
-  country: string;
 }
 
 export class ShippingAddress extends ValueObject<ShippingAddressProps> {
@@ -88,15 +86,9 @@ export class ShippingAddress extends ValueObject<ShippingAddressProps> {
   get state() {
     return this.value.state;
   }
-  get zipCode() {
-    return this.value.zipCode;
-  }
-  get country() {
-    return this.value.country;
-  }
 
   static create(props: ShippingAddressProps): ShippingAddress {
-    if (!props.street || !props.city || !props.state || !props.zipCode) {
+    if (!props.street || !props.city || !props.state) {
       throw new Error("All address fields are required");
     }
     return new ShippingAddress(props);

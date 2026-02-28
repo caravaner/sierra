@@ -8,8 +8,6 @@ export interface AddAddressParams {
   street: string;
   city: string;
   state: string;
-  zipCode: string;
-  country: string;
   isDefault: boolean;
 }
 
@@ -29,8 +27,6 @@ export class AddAddressCommand extends Command<AddAddressParams, { addressId: st
       street: input.street,
       city: input.city,
       state: input.state,
-      zipCode: input.zipCode,
-      country: input.country,
       isDefault: input.isDefault,
     });
 

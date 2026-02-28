@@ -60,9 +60,8 @@ export default function AdminUserDetailPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    {addr.city}, {addr.state} {addr.zipCode}
+                    {addr.city}, {addr.state}
                   </p>
-                  <p className="text-sm text-muted-foreground">{addr.country}</p>
                 </CardContent>
               </Card>
             ))}

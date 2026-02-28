@@ -3,9 +3,10 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  schemas  = ["main", "eventlog"]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas   = ["main", "eventlog"]
 }
 
 // ─── Auth (NextAuth.js) ─────────────────────────────────────
@@ -120,8 +121,6 @@ model Address {
   street     String
   city       String
   state      String
-  zipCode    String  @map("zip_code")
-  country    String  @default("US")
   isDefault  Boolean @default(false) @map("is_default")
   attributes Json    @default("{}") @db.JsonB
 
@@ -186,8 +185,8 @@ model Product {
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
-  brand       Brand?       @relation(fields: [brandId], references: [id])
-  productType ProductType? @relation(fields: [productTypeId], references: [id])
+  brand       Brand?         @relation(fields: [brandId], references: [id])
+  productType ProductType?   @relation(fields: [productTypeId], references: [id])
   inventory   InventoryItem?
   orderItems  OrderItem[]
   cartItems   CartItem[]
@@ -218,8 +217,8 @@ model InventoryItem {
 
 model StoreSettings {
   id               String  @id @default("singleton")
-  deliveryFee      Decimal @default(500) @db.Decimal(10, 2) @map("delivery_fee")
-  freeDeliveryFrom Decimal @default(10000) @db.Decimal(10, 2) @map("free_delivery_from")
+  deliveryFee      Decimal @default(500) @map("delivery_fee") @db.Decimal(10, 2)
+  freeDeliveryFrom Decimal @default(10000) @map("free_delivery_from") @db.Decimal(10, 2)
 
   @@map("store_settings")
   @@schema("main")
@@ -283,15 +282,13 @@ model Order {
   subscriptionId   String?       @map("subscription_id")
   status           OrderStatus   @default(PENDING)
   paymentMethod    PaymentMethod @default(BANK_TRANSFER) @map("payment_method")
-  paymentStatus    PaymentStatus @default(PENDING)       @map("payment_status")
-  paymentReference String?                               @map("payment_reference")
+  paymentStatus    PaymentStatus @default(PENDING) @map("payment_status")
+  paymentReference String?       @map("payment_reference")
   shippingStreet   String        @map("shipping_street")
   shippingCity     String        @map("shipping_city")
   shippingState    String        @map("shipping_state")
-  shippingZipCode  String        @map("shipping_zip_code")
-  shippingCountry  String        @default("NG")          @map("shipping_country")
-  deliveryFee      Decimal       @default(0) @db.Decimal(10, 2) @map("delivery_fee")
-  totalAmount      Decimal       @db.Decimal(10, 2)      @map("total_amount")
+  deliveryFee      Decimal       @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
   version          Int           @default(0)
   attributes       Json          @default("{}") @db.JsonB
   createdAt        DateTime      @default(now()) @map("created_at")
@@ -313,7 +310,7 @@ model OrderItem {
   productId  String  @map("product_id")
   name       String
   quantity   Int
-  unitPrice  Decimal @db.Decimal(10, 2) @map("unit_price")
+  unitPrice  Decimal @map("unit_price") @db.Decimal(10, 2)
   attributes Json    @default("{}") @db.JsonB
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -353,7 +350,7 @@ model Invoice {
   orderId       String        @unique @map("order_id")
   customerId    String        @map("customer_id")
   subtotal      Decimal       @db.Decimal(10, 2)
-  deliveryFee   Decimal       @db.Decimal(10, 2) @map("delivery_fee")
+  deliveryFee   Decimal       @map("delivery_fee") @db.Decimal(10, 2)
   total         Decimal       @db.Decimal(10, 2)
   status        InvoiceStatus @default(ISSUED)
   issuedAt      DateTime      @map("issued_at")
@@ -371,10 +368,10 @@ model Invoice {
 // ─── Cart ─────────────────────────────────────────────────
 
 model Cart {
-  id        String     @id @default(cuid())
-  userId    String     @unique @map("user_id")
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   items CartItem[]

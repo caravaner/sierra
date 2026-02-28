@@ -101,8 +101,6 @@ CREATE TABLE "addresses" (
     "street" TEXT NOT NULL,
     "city" TEXT NOT NULL,
     "state" TEXT NOT NULL,
-    "zip_code" TEXT NOT NULL,
-    "country" TEXT NOT NULL DEFAULT 'US',
     "is_default" BOOLEAN NOT NULL DEFAULT false,
     "attributes" JSONB NOT NULL DEFAULT '{}',
 
@@ -193,8 +191,6 @@ CREATE TABLE "orders" (
     "shipping_street" TEXT NOT NULL,
     "shipping_city" TEXT NOT NULL,
     "shipping_state" TEXT NOT NULL,
-    "shipping_zip_code" TEXT NOT NULL,
-    "shipping_country" TEXT NOT NULL DEFAULT 'NG',
     "delivery_fee" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "total_amount" DECIMAL(10,2) NOT NULL,
     "version" INTEGER NOT NULL DEFAULT 0,

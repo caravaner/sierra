@@ -14,8 +14,6 @@ export interface PlaceOrderParams {
     street: string;
     city: string;
     state: string;
-    zipCode: string;
-    country: string;
   };
   deliveryFee?: number;
 }
