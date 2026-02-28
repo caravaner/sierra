@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { auth } from "@sierra/auth";
 import { uploadFile, UploadError } from "@/lib/storage";
 

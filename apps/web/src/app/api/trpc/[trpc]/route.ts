@@ -1,4 +1,6 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+
+export const dynamic = "force-dynamic";
 import { auth } from "@sierra/auth";
 import type { Session } from "@sierra/auth";
 import { appRouter, type TRPCContext } from "@sierra/api";

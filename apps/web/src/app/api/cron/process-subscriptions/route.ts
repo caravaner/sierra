@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
 import { prisma } from "@sierra/db";
 import { PlaceOrderCommand, calculateDeliveryFee, AttributeBag } from "@sierra/domain";
 import {
