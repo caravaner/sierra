@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Power, PowerOff } from "lucide-react";
 import { toast } from "sonner";
 
-interface BrandItem {
+export interface BrandItem {
   id: string;
   name: string;
   slug: string;

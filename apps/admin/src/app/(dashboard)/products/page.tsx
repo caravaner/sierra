@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 
 interface CatalogRef { id: string; name: string; slug: string }
 
-interface ProductItem {
+export interface ProductItem {
   id: string;
   name: string;
   sku: string;
