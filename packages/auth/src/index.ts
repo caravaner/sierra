@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@sierra/db";
 import { makeLogger } from "@sierra/logger";
+import { authConfig } from "./config";
 import type { UserRole } from "./types";
 
 export type { UserRole } from "./types";
@@ -12,17 +13,8 @@ export type { Session } from "next-auth";
 const log = makeLogger({ module: "auth" });
 
 const config: NextAuthConfig = {
-  trustHost: true,
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as NextAuthConfig["adapter"],
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/auth/signin",
-  },
-  ...(process.env.AUTH_COOKIE_NAME && {
-    cookies: {
-      sessionToken: { name: process.env.AUTH_COOKIE_NAME },
-    },
-  }),
   providers: [
     Credentials({
       name: "credentials",
@@ -74,22 +66,6 @@ const config: NextAuthConfig = {
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = (user as Record<string, unknown>).role as UserRole;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-      }
-      return session;
-    },
-  },
   events: {
     async signIn({ user }) {
       log.info({ userId: user.id, email: user.email }, "auth.signIn");
