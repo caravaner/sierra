@@ -1,4 +1,4 @@
-import { auth } from "@sierra/auth";
+import { auth } from "@sierra/auth/edge";
 import { NextResponse } from "next/server";
 import type { NextMiddleware } from "next/server";
 
