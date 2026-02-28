@@ -1,4 +1,7 @@
 -- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "main";
+
+-- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "eventlog";
 
 -- CreateEnum
