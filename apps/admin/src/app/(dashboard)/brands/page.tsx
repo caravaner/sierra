@@ -194,7 +194,7 @@ export default function BrandsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.map((brand) => (
+              {data?.map((brand: BrandItem) => (
                 <TableRow key={brand.id} className={!brand.isActive ? "opacity-50" : undefined}>
                   <TableCell>
                     <div className="flex items-center gap-3">
