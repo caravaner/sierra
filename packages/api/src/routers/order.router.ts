@@ -46,6 +46,26 @@ export const orderRouter = router({
     };
   }),
 
+  myOrderStatus: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const order = await ctx.prisma.order.findFirst({
+        where: {
+          id: input.orderId,
+          customer: { userId: ctx.session.user.id },
+        },
+        select: {
+          paymentStatus: true,
+          paymentVerification: { select: { status: true } },
+        },
+      });
+      if (!order) throw new Error("Order not found");
+      return {
+        paymentStatus: order.paymentStatus,
+        verificationStatus: order.paymentVerification?.status ?? null,
+      };
+    }),
+
   place: protectedProcedure.input(placeOrderSchema).mutation(async ({ ctx, input }) => {
     const principal = toPrincipal(ctx.session);
     const customerRepo = new PrismaCustomerRepository(ctx.prisma);
@@ -123,18 +143,24 @@ export const orderRouter = router({
 
   // Admin routes
   list: adminProcedure.input(orderFilterSchema).query(async ({ ctx, input }) => {
-    const repo = new PrismaOrderRepository(ctx.prisma);
+    const where = input.status ? { status: input.status as never } : undefined;
     const [orders, total] = await Promise.all([
-      repo.findAll(input),
-      repo.count({ status: input.status }),
+      ctx.prisma.order.findMany({
+        where,
+        include: { customer: { select: { firstName: true, lastName: true } } },
+        take: input.limit ?? 20,
+        skip: input.offset ?? 0,
+        orderBy: { createdAt: "desc" },
+      }),
+      ctx.prisma.order.count({ where }),
     ]);
     return {
       items: orders.map((o) => ({
         id: o.id,
-        customerId: o.customerId,
-        status: o.status.value,
+        customerName: [o.customer.firstName, o.customer.lastName].filter(Boolean).join(" "),
+        status: o.status,
         totalAmount: o.totalAmount,
-        itemCount: o.items.length,
+        itemCount: 0,
         createdAt: o.createdAt,
       })),
       total,
