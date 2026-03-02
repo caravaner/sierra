@@ -72,7 +72,7 @@ export default function CheckoutPaymentPage() {
     setPlacing(true);
 
     try {
-      await placeOrder.mutateAsync({
+      const result = await placeOrder.mutateAsync({
         items: items.map((i) => ({
           productId: i.productId,
           name: i.name,
@@ -86,6 +86,7 @@ export default function CheckoutPaymentPage() {
       // Persist address for next time
       localStorage.setItem(ADDRESS_STORAGE_KEY, JSON.stringify(pendingOrder.address));
       sessionStorage.removeItem(PENDING_ORDER_KEY);
+      sessionStorage.setItem("sierra-pending-order-id", result.id);
       clearCart();
       toast.success("Order placed! Awaiting payment confirmation.");
       router.push("/checkout/pending");

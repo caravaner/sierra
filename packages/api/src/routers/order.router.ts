@@ -46,6 +46,26 @@ export const orderRouter = router({
     };
   }),
 
+  myOrderStatus: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const order = await ctx.prisma.order.findFirst({
+        where: {
+          id: input.orderId,
+          customer: { userId: ctx.session.user.id },
+        },
+        select: {
+          paymentStatus: true,
+          paymentVerification: { select: { status: true } },
+        },
+      });
+      if (!order) throw new Error("Order not found");
+      return {
+        paymentStatus: order.paymentStatus,
+        verificationStatus: order.paymentVerification?.status ?? null,
+      };
+    }),
+
   place: protectedProcedure.input(placeOrderSchema).mutation(async ({ ctx, input }) => {
     const principal = toPrincipal(ctx.session);
     const customerRepo = new PrismaCustomerRepository(ctx.prisma);
