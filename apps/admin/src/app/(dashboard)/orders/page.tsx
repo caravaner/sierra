@@ -33,7 +33,7 @@ export default function OrdersPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
+                    <TableHead>Customer</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Total</TableHead>
                 <TableHead>Date</TableHead>
@@ -45,8 +45,8 @@ export default function OrdersPage() {
                   <TableCell className="font-mono font-medium">
                     #{order.id.slice(0, 8).toUpperCase()}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {order.customerId.slice(0, 8)}…
+                  <TableCell className="font-medium">
+                    {order.customerName}
                   </TableCell>
                   <TableCell>
                     <Badge variant={statusVariant(order.status)}>{order.status}</Badge>
