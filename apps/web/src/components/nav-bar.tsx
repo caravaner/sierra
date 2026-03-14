@@ -68,7 +68,7 @@ export function NavBar() {
                 </Button>
               ) : (
                 <Button size="sm" asChild>
-                  <Link href="/auth/signin">Sign In</Link>
+                  <Link href={`/auth/signin?callbackUrl=${encodeURIComponent(pathname)}`}>Sign In</Link>
                 </Button>
               )}
             </>

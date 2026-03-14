@@ -35,3 +35,16 @@ export class StockReplenishedEvent extends DomainEvent<StockReplenishedPayload> 
     super(aggregateId, "Inventory", "Inventory.StockReplenished", principalId, payload);
   }
 }
+
+export interface StockDepletedPayload {
+  productId: string;
+  quantity: number;
+  reason?: string;
+  quantityOnHandAfter: number;
+}
+
+export class StockDepletedEvent extends DomainEvent<StockDepletedPayload> {
+  constructor(aggregateId: string, principalId: string, payload: StockDepletedPayload) {
+    super(aggregateId, "Inventory", "Inventory.StockDepleted", principalId, payload);
+  }
+}

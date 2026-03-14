@@ -60,8 +60,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
           create: entity.addresses.map((a) => ({
             id: a.id,
             street: a.street,
-            city: a.city,
-            state: a.state,
+            deliveryAreaId: a.deliveryAreaId,
             isDefault: a.isDefault,
           })),
         },
@@ -97,8 +96,7 @@ export class PrismaCustomerRepository implements CustomerRepository {
         (a: any) => ({
           id: a.id,
           street: a.street,
-          city: a.city,
-          state: a.state,
+          deliveryAreaId: a.deliveryAreaId,
           isDefault: a.isDefault,
         }),
       ),

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   ShoppingCart,
@@ -14,11 +14,15 @@ import {
   Banknote,
   Tag,
   Award,
+  MapPin,
+  KeyRound,
   Menu,
   X,
+  Bell,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { APP_NAME } from "@sierra/shared";
+import { trpc } from "@/lib/trpc";
 
 const navSections = [
   {
@@ -37,16 +41,41 @@ const navSections = [
       { href: "/brands", label: "Brands", icon: Award },
       { href: "/product-types", label: "Product Types", icon: Tag },
       { href: "/inventory", label: "Inventory", icon: Warehouse },
+      { href: "/delivery-areas", label: "Delivery Areas", icon: MapPin },
     ],
   },
   {
     label: null,
     items: [
       { href: "/users", label: "Users", icon: Users },
+      { href: "/api-keys", label: "API Keys", icon: KeyRound },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
+
+function NotificationBell() {
+  const router = useRouter();
+  const { data } = trpc.payment.pendingCount.useQuery(undefined, {
+    refetchInterval: 30_000,
+  });
+  const count = data?.count ?? 0;
+
+  return (
+    <button
+      onClick={() => router.push("/payments")}
+      aria-label={`${count} pending payment${count !== 1 ? "s" : ""}`}
+      className="relative rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+    >
+      <Bell className="h-5 w-5" />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+          {count > 9 ? "9+" : count}
+        </span>
+      )}
+    </button>
+  );
+}
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,9 +93,12 @@ export function Sidebar() {
           </p>
           <h1 className="text-sm font-bold leading-tight">Admin</h1>
         </div>
-        <button onClick={() => setIsOpen(true)} aria-label="Open menu">
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <button onClick={() => setIsOpen(true)} aria-label="Open menu">
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
       {/* Backdrop */}
@@ -92,9 +124,12 @@ export function Sidebar() {
             </p>
             <h1 className="text-lg font-bold">Admin</h1>
           </div>
-          <button className="md:hidden" onClick={close} aria-label="Close menu">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <NotificationBell />
+            <button className="md:hidden" onClick={close} aria-label="Close menu">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         <Separator />
         <nav className="flex-1 space-y-4 overflow-y-auto p-3">

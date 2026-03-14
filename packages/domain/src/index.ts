@@ -42,7 +42,7 @@ export type { UpdateProductParams } from "./product/commands/update-product.comm
 // Inventory
 export { InventoryItem } from "./inventory/inventory.entity";
 export type { InventoryRepository } from "./inventory/inventory.repository";
-export { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent } from "./inventory/inventory.events";
+export { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent, StockDepletedEvent } from "./inventory/inventory.events";
 export { ReplenishStockCommand } from "./inventory/commands/replenish-stock.command";
 export type { ReplenishStockParams } from "./inventory/commands/replenish-stock.command";
 

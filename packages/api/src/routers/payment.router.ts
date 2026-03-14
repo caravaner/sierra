@@ -11,6 +11,13 @@ function notify() {
 }
 
 export const paymentRouter = router({
+  pendingCount: adminProcedure.query(async ({ ctx }) => {
+    const count = await ctx.prisma.paymentVerification.count({
+      where: { status: "PENDING" },
+    });
+    return { count };
+  }),
+
   list: adminProcedure
     .input(
       z.object({

@@ -83,7 +83,7 @@ export default function CheckoutPaymentPage() {
         paymentMethod: "BANK_TRANSFER",
       });
 
-      // Persist address for next time
+      // Persist address for next time (new format with deliveryAreaId)
       localStorage.setItem(ADDRESS_STORAGE_KEY, JSON.stringify(pendingOrder.address));
       sessionStorage.removeItem(PENDING_ORDER_KEY);
       sessionStorage.setItem("sierra-pending-order-id", result.id);
@@ -153,9 +153,7 @@ export default function CheckoutPaymentPage() {
               Shipping to
             </p>
             <p className="text-sm font-medium">{pendingOrder.address.street}</p>
-            <p className="text-sm text-muted-foreground">
-              {pendingOrder.address.city}, {pendingOrder.address.state}
-            </p>
+            <p className="text-sm text-muted-foreground">{pendingOrder.address.areaName}</p>
           </CardContent>
         </Card>
 

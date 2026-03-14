@@ -77,8 +77,7 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
             create: entity.addresses.map((a) => ({
               id: a.id,
               street: a.street,
-              city: a.city,
-              state: a.state,
+              deliveryAreaId: a.deliveryAreaId,
               isDefault: a.isDefault,
             })),
           },
@@ -109,8 +108,7 @@ export class UowCustomerRepository implements CustomerRepository, UowRepository<
       addresses: row.addresses.map((a: any) => ({
         id: a.id,
         street: a.street,
-        city: a.city,
-        state: a.state,
+        deliveryAreaId: a.deliveryAreaId,
         isDefault: a.isDefault,
       })),
       attributes: new AttributeBag(row.attributes ?? {}),

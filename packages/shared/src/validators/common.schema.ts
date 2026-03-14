@@ -10,9 +10,8 @@ export const idSchema = z.object({
 });
 
 export const addressSchema = z.object({
-  street: z.string().min(1, "Street is required"),
-  city: z.string().min(1, "City is required"),
-  state: z.string().min(1, "State is required"),
+  street: z.string().min(1, "Street / house detail is required"),
+  deliveryAreaId: z.string().min(1, "Delivery area is required"),
 });
 
 export type PaginationInput = z.infer<typeof paginationSchema>;

@@ -1,7 +1,7 @@
 import { AggregateRoot } from "../shared/aggregate-root.base";
 import { AttributeBag } from "../shared/attribute-bag";
 import type { DomainEvent } from "../shared/domain-event.base";
-import { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent } from "./inventory.events";
+import { StockReservedEvent, StockReleasedEvent, StockReplenishedEvent, StockDepletedEvent } from "./inventory.events";
 
 interface InventoryItemProps {
   productId: string;
@@ -129,6 +129,27 @@ export class InventoryItem extends AggregateRoot<InventoryItemProps> {
       new StockReplenishedEvent(this.id, principalId, {
         productId: this.props.productId,
         quantity,
+        quantityOnHandAfter: newOnHand,
+      }),
+    );
+  }
+
+  deplete(principalId: string, quantity: number, reason?: string): InventoryItem {
+    if (quantity <= 0) throw new Error("Quantity must be positive");
+    if (quantity > this.props.quantityOnHand) {
+      throw new Error(
+        `Cannot deplete ${quantity}, only ${this.props.quantityOnHand} on hand`,
+      );
+    }
+    const newOnHand = this.props.quantityOnHand - quantity;
+    // If depletion cuts into reserved stock, reduce reserved proportionally
+    const newReserved = Math.min(this.props.quantityReserved, newOnHand);
+    return this.addEvent(
+      { ...this.props, quantityOnHand: newOnHand, quantityReserved: newReserved, updatedAt: new Date() },
+      new StockDepletedEvent(this.id, principalId, {
+        productId: this.props.productId,
+        quantity,
+        reason,
         quantityOnHandAfter: newOnHand,
       }),
     );

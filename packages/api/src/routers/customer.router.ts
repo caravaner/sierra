@@ -46,6 +46,12 @@ export const customerRouter = router({
   addAddress: protectedProcedure
     .input(addressSchema.extend({ isDefault: z.boolean().default(false) }))
     .mutation(async ({ ctx, input }) => {
+      const area = await ctx.prisma.deliveryArea.findUnique({
+        where: { id: input.deliveryAreaId },
+      });
+      if (!area) throw new Error("Delivery area not found.");
+      if (!area.isActive) throw new Error("This delivery area is not currently available for delivery.");
+
       const principal = toPrincipal(ctx.session);
       return runCommand(
         ctx.prisma,
@@ -61,8 +67,7 @@ export const customerRouter = router({
       z.object({
         addressId: z.string(),
         street: z.string().min(1).optional(),
-        city: z.string().min(1).optional(),
-        state: z.string().min(1).optional(),
+        deliveryAreaId: z.string().optional(),
         isDefault: z.boolean().optional(),
       }),
     )
@@ -98,10 +103,27 @@ export const customerRouter = router({
     }),
 
   listAddresses: protectedProcedure.query(async ({ ctx }) => {
-    const repo = new PrismaCustomerRepository(ctx.prisma);
-    const customer = await repo.findByUserId(ctx.session.user.id);
-    if (!customer) return { addresses: [] };
-    return { addresses: customer.addresses };
+    const customer = await ctx.prisma.customer.findUnique({
+      where: { userId: ctx.session.user.id },
+      select: {
+        addresses: {
+          select: {
+            id: true,
+            street: true,
+            isDefault: true,
+            deliveryArea: { select: { id: true, name: true, isActive: true } },
+          },
+        },
+      },
+    });
+    const addresses = (customer?.addresses ?? []).map((a) => ({
+      id: a.id,
+      street: a.street,
+      isDefault: a.isDefault,
+      deliveryAreaId: a.deliveryArea.id,
+      deliveryArea: { name: a.deliveryArea.name, isActive: a.deliveryArea.isActive },
+    }));
+    return { addresses };
   }),
 
   // Admin routes
@@ -129,8 +151,14 @@ export const customerRouter = router({
   byId: adminProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const repo = new PrismaCustomerRepository(ctx.prisma);
-      const customer = await repo.findById(input.id);
+      const customer = await ctx.prisma.customer.findUnique({
+        where: { id: input.id },
+        include: {
+          addresses: {
+            include: { deliveryArea: { select: { name: true, isActive: true } } },
+          },
+        },
+      });
       if (!customer) return null;
       return {
         id: customer.id,
@@ -139,7 +167,14 @@ export const customerRouter = router({
         email: customer.email,
         firstName: customer.firstName,
         lastName: customer.lastName,
-        addresses: customer.addresses,
+        addresses: customer.addresses.map((a) => ({
+          id: a.id,
+          street: a.street,
+          deliveryAreaId: a.deliveryAreaId,
+          deliveryAreaName: a.deliveryArea.name,
+          deliveryAreaActive: a.deliveryArea.isActive,
+          isDefault: a.isDefault,
+        })),
         createdAt: customer.createdAt,
       };
     }),

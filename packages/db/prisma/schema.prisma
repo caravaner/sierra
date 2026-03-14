@@ -117,17 +117,34 @@ model Customer {
 }
 
 model Address {
-  id         String  @id @default(cuid())
-  customerId String  @map("customer_id")
-  street     String
-  city       String
-  state      String
-  isDefault  Boolean @default(false) @map("is_default")
-  attributes Json    @default("{}") @db.JsonB
+  id             String  @id @default(cuid())
+  customerId     String  @map("customer_id")
+  street         String
+  deliveryAreaId String  @map("delivery_area_id")
+  isDefault      Boolean @default(false) @map("is_default")
+  attributes     Json    @default("{}") @db.JsonB
 
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer     Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  deliveryArea DeliveryArea @relation(fields: [deliveryAreaId], references: [id])
 
   @@map("addresses")
+  @@schema("main")
+}
+
+// ─── Delivery Areas ──────────────────────────────────────────
+
+model DeliveryArea {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  deliveryFee Decimal? @map("delivery_fee") @db.Decimal(10, 2)
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  addresses Address[]
+
+  @@map("delivery_areas")
   @@schema("main")
 }
 
@@ -443,6 +460,20 @@ model PaymentVerification {
   customer Customer @relation(fields: [customerId], references: [id])
 
   @@map("payment_verifications")
+  @@schema("main")
+}
+
+// ─── API Keys ─────────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  key        String    @unique
+  isActive   Boolean   @default(true) @map("is_active")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime? @map("last_used_at")
+
+  @@map("api_keys")
   @@schema("main")
 }
 
