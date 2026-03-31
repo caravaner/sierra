@@ -3,6 +3,7 @@ import { SessionProvider } from "next-auth/react";
 import { TRPCProvider } from "@/lib/trpc-provider";
 import { CartProvider } from "@/lib/cart-context";
 import { NavBar } from "@/components/nav-bar";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { Toaster } from "sonner";
 import { APP_NAME } from "@sierra/shared";
 import "./globals.css";
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <NavBar />
           <main className="mx-auto max-w-7xl px-6 py-10">{children}</main>
+          <WhatsAppButton />
           <Toaster position="bottom-right" />
         </Providers>
       </body>
