@@ -6,8 +6,7 @@ import type { CustomerRepository } from "../customer.repository";
 export interface AddAddressParams {
   userId: string;
   street: string;
-  city: string;
-  state: string;
+  deliveryAreaId: string;
   isDefault: boolean;
 }
 
@@ -25,8 +24,7 @@ export class AddAddressCommand extends Command<AddAddressParams, { addressId: st
 
     const updated = customer.addAddress(principal.id, {
       street: input.street,
-      city: input.city,
-      state: input.state,
+      deliveryAreaId: input.deliveryAreaId,
       isDefault: input.isDefault,
     });
 

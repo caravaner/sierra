@@ -72,20 +72,37 @@ export const orderRouter = router({
     const customer = await customerRepo.findByUserId(principal.id);
     if (!customer) throw new Error("Customer not found. Please complete your profile.");
 
+    // Resolve delivery area
+    const area = await ctx.prisma.deliveryArea.findUnique({
+      where: { id: input.shippingAddress.deliveryAreaId },
+    });
+    if (!area) throw new Error("Delivery area not found.");
+    if (!area.isActive) throw new Error("This delivery area is not currently available.");
+
     const settings = await ctx.prisma.storeSettings.findUnique({ where: { id: "singleton" } });
     const config = {
       deliveryFee: Number(settings?.deliveryFee ?? 500),
       freeDeliveryFrom: Number(settings?.freeDeliveryFrom ?? 10000),
     };
     const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-    const deliveryFee = calculateDeliveryFee(subtotal, config);
+    // Area-specific fee overrides store default; otherwise apply free-delivery threshold
+    const deliveryFee =
+      area.deliveryFee != null
+        ? Number(area.deliveryFee)
+        : calculateDeliveryFee(subtotal, config);
+
+    const resolvedAddress = {
+      street: input.shippingAddress.street,
+      city: area.name,
+      state: area.description ?? "N/A",
+    };
 
     const result = await runCommand(
       ctx.prisma,
       principal,
       (uow, { orderRepo, inventoryRepo }) =>
         new PlaceOrderCommand(uow, orderRepo, inventoryRepo),
-      { customerId: customer.id, items: input.items, shippingAddress: input.shippingAddress, deliveryFee },
+      { customerId: customer.id, items: input.items, shippingAddress: resolvedAddress, deliveryFee },
     );
 
     // Store payment method and create verification record for bank transfers
@@ -95,7 +112,6 @@ export const orderRouter = router({
     });
 
     if (input.paymentMethod === "BANK_TRANSFER") {
-      const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
       await ctx.prisma.paymentVerification.create({
         data: {
           orderId: result.id,
@@ -106,11 +122,7 @@ export const orderRouter = router({
     }
 
     if (customer.email) {
-      const shippingAddress = [
-        input.shippingAddress.street,
-        input.shippingAddress.city,
-        input.shippingAddress.state,
-      ].join(", ");
+      const shippingAddressDisplay = [input.shippingAddress.street, area.name].join(", ");
 
       void notify()
         .sendOrderPlaced(customer.email, {
@@ -122,7 +134,7 @@ export const orderRouter = router({
             unitPrice: i.unitPrice,
           })),
           totalAmount: subtotal + deliveryFee,
-          shippingAddress,
+          shippingAddress: shippingAddressDisplay,
         })
         .catch(console.error);
     }
@@ -195,5 +207,70 @@ export const orderRouter = router({
       })().catch(console.error);
 
       return result;
+    }),
+
+  adminPlace: adminProcedure
+    .input(
+      z.object({
+        customerId: z.string(),
+        items: z.array(
+          z.object({
+            productId: z.string(),
+            name: z.string(),
+            quantity: z.number().int().positive(),
+            unitPrice: z.number().nonnegative(),
+          }),
+        ).min(1),
+        deliveryAreaId: z.string(),
+        street: z.string().min(1),
+        paymentMethod: z.enum(["BANK_TRANSFER", "ONLINE"]).default("BANK_TRANSFER"),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const principal = toPrincipal(ctx.session);
+
+      const customer = await ctx.prisma.customer.findUnique({ where: { id: input.customerId } });
+      if (!customer) throw new Error("Customer not found");
+
+      const area = await ctx.prisma.deliveryArea.findUnique({ where: { id: input.deliveryAreaId } });
+      if (!area) throw new Error("Delivery area not found");
+      if (!area.isActive) throw new Error("Delivery area is not active");
+
+      const settings = await ctx.prisma.storeSettings.findUnique({ where: { id: "singleton" } });
+      const config = {
+        deliveryFee: Number(settings?.deliveryFee ?? 500),
+        freeDeliveryFrom: Number(settings?.freeDeliveryFrom ?? 10000),
+      };
+      const subtotal = input.items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+      const deliveryFee =
+        area.deliveryFee != null
+          ? Number(area.deliveryFee)
+          : calculateDeliveryFee(subtotal, config);
+
+      const result = await runCommand(
+        ctx.prisma,
+        principal,
+        (uow, { orderRepo, inventoryRepo }) =>
+          new PlaceOrderCommand(uow, orderRepo, inventoryRepo),
+        {
+          customerId: input.customerId,
+          items: input.items,
+          shippingAddress: { street: input.street, city: area.name, state: area.description ?? "N/A" },
+          deliveryFee,
+        },
+      );
+
+      await ctx.prisma.order.update({
+        where: { id: result.id },
+        data: { paymentMethod: input.paymentMethod },
+      });
+
+      if (input.paymentMethod === "BANK_TRANSFER") {
+        await ctx.prisma.paymentVerification.create({
+          data: { orderId: result.id, customerId: input.customerId, amount: subtotal + deliveryFee },
+        });
+      }
+
+      return { orderId: result.id, deliveryFee, total: subtotal + deliveryFee };
     }),
 });

@@ -13,6 +13,8 @@ import { userRouter } from "./routers/user.router";
 import { notificationRouter } from "./routers/notification.router";
 import { paymentRouter } from "./routers/payment.router";
 import { brandRouter, productTypeRouter } from "./routers/brand.router";
+import { deliveryAreaRouter } from "./routers/deliveryArea.router";
+import { apiKeyRouter } from "./routers/apiKey.router";
 
 export const appRouter = router({
   product: productRouter,
@@ -30,6 +32,8 @@ export const appRouter = router({
   payment: paymentRouter,
   brand: brandRouter,
   productType: productTypeRouter,
+  deliveryArea: deliveryAreaRouter,
+  apiKey: apiKeyRouter,
 });
 
 export type AppRouter = typeof appRouter;

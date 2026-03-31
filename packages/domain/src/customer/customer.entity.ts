@@ -10,8 +10,7 @@ import {
 export interface CustomerAddress {
   id: string;
   street: string;
-  city: string;
-  state: string;
+  deliveryAreaId: string;
   isDefault: boolean;
 }
 

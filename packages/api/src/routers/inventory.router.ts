@@ -5,6 +5,8 @@ import { router, adminProcedure, publicProcedure } from "../trpc";
 import { PrismaInventoryRepository } from "../repositories/inventory.repository.prisma";
 import { runCommand } from "../commands/run-command";
 import { toPrincipal } from "../commands/to-principal";
+import { PrismaUnitOfWork } from "../uow/unit-of-work";
+import { UowInventoryRepository } from "../repositories/uow/inventory.repository.uow";
 
 export const inventoryRouter = router({
   checkAvailability: publicProcedure
@@ -80,6 +82,38 @@ export const inventoryRouter = router({
     });
     return products;
   }),
+
+  deplete: adminProcedure
+    .input(
+      z.object({
+        productId: z.string(),
+        quantity: z.number().int().positive(),
+        reason: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const principal = toPrincipal(ctx.session);
+      const repo = new PrismaInventoryRepository(ctx.prisma);
+      const item = await repo.findByProductId(input.productId);
+      if (!item) throw new Error("Inventory record not found");
+
+      const depleted = item.deplete(principal.id, input.quantity, input.reason);
+
+      const uow = new PrismaUnitOfWork(ctx.prisma);
+      const uowRepo = new UowInventoryRepository(ctx.prisma, uow);
+      await uowRepo.save(depleted);
+      await uow.commit({
+        commandName: "DepleteStock",
+        commandId: crypto.randomUUID(),
+        principalId: principal.id,
+        timestamp: new Date(),
+      });
+
+      return {
+        quantityOnHand: depleted.quantityOnHand,
+        quantityAvailable: depleted.quantityAvailable,
+      };
+    }),
 
   // Create a new inventory record for a product
   create: adminProcedure

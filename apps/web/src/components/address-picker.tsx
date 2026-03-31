@@ -1,181 +1,70 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
-import {
-  GoogleMap,
-  useJsApiLoader,
-  Marker,
-  Autocomplete,
-} from "@react-google-maps/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const libraries: ("places")[] = ["places"];
+export interface DeliveryArea {
+  id: string;
+  name: string;
+  description?: string | null;
+}
 
-interface AddressFields {
+export interface AddressFields {
   street: string;
-  city: string;
-  state: string;
+  deliveryAreaId: string;
+  areaName: string;
 }
 
 interface AddressPickerProps {
-  onAddressSelect: (address: AddressFields) => void;
-  defaultValue?: AddressFields;
+  areas: DeliveryArea[];
+  value: AddressFields;
+  onChange: (address: AddressFields) => void;
 }
 
-const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-const defaultCenter = { lat: 37.7749, lng: -122.4194 };
-
-function parsePlace(place: google.maps.places.PlaceResult): AddressFields {
-  const components = place.address_components ?? [];
-  let street = "";
-  let city = "";
-  let state = "";
-
-  for (const c of components) {
-    const types = c.types;
-    if (types.includes("street_number")) {
-      street = c.long_name + " " + street;
-    } else if (types.includes("route")) {
-      street = street + c.long_name;
-    } else if (types.includes("locality") || types.includes("sublocality")) {
-      city = c.long_name;
-    } else if (types.includes("administrative_area_level_1")) {
-      state = c.short_name;
-    }
+export function AddressPicker({ areas, value, onChange }: AddressPickerProps) {
+  function handleAreaChange(areaId: string) {
+    const area = areas.find((a) => a.id === areaId);
+    onChange({ ...value, deliveryAreaId: areaId, areaName: area?.name ?? "" });
   }
 
-  return { street: street.trim(), city, state };
-}
-
-function AddressFormFields({
-  fields,
-  onChange,
-}: {
-  fields: AddressFields;
-  onChange: (field: keyof AddressFields, value: string) => void;
-}) {
-  return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <div className="space-y-2 sm:col-span-2">
-        <Label>Street</Label>
-        <Input
-          type="text"
-          value={fields.street}
-          onChange={(e) => onChange("street", e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>City</Label>
-        <Input
-          type="text"
-          value={fields.city}
-          onChange={(e) => onChange("city", e.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label>State</Label>
-        <Input
-          type="text"
-          value={fields.state}
-          onChange={(e) => onChange("state", e.target.value)}
-        />
-      </div>
-    </div>
-  );
-}
-
-export function AddressPicker({ onAddressSelect, defaultValue }: AddressPickerProps) {
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: MAPS_API_KEY,
-    libraries,
-  });
-
-  const [fields, setFields] = useState<AddressFields>(
-    defaultValue ?? { street: "", city: "", state: "" },
-  );
-  const [markerPos, setMarkerPos] = useState(defaultCenter);
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-
-  const handleFieldChange = useCallback(
-    (field: keyof AddressFields, value: string) => {
-      const updated = { ...fields, [field]: value };
-      setFields(updated);
-      onAddressSelect(updated);
-    },
-    [fields, onAddressSelect],
-  );
-
-  const handlePlaceSelect = useCallback(() => {
-    const place = autocompleteRef.current?.getPlace();
-    if (!place?.address_components) return;
-
-    const parsed = parsePlace(place);
-    setFields(parsed);
-    onAddressSelect(parsed);
-
-    if (place.geometry?.location) {
-      setMarkerPos({
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-      });
-    }
-  }, [onAddressSelect]);
-
-  const handleMarkerDragEnd = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      if (!e.latLng) return;
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      setMarkerPos({ lat, lng });
-
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === "OK" && results?.[0]) {
-          const parsed = parsePlace(results[0]);
-          setFields(parsed);
-          onAddressSelect(parsed);
-        }
-      });
-    },
-    [onAddressSelect],
-  );
-
-  // No API key or failed to load — show manual fields only
-  if (!MAPS_API_KEY || !isLoaded) {
-    return (
-      <div className="space-y-4">
-        {MAPS_API_KEY && (
-          <p className="text-sm text-muted-foreground">Loading map...</p>
-        )}
-        <AddressFormFields fields={fields} onChange={handleFieldChange} />
-      </div>
-    );
+  function handleStreetChange(street: string) {
+    onChange({ ...value, street });
   }
 
   return (
     <div className="space-y-4">
-      <Autocomplete
-        onLoad={(a) => (autocompleteRef.current = a)}
-        onPlaceChanged={handlePlaceSelect}
-      >
-        <Input
-          type="text"
-          placeholder="Search for an address..."
-        />
-      </Autocomplete>
-
-      <div className="overflow-hidden rounded-md border">
-        <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "300px" }}
-          center={markerPos}
-          zoom={14}
+      <div className="space-y-2">
+        <Label htmlFor="delivery-area">Delivery Area</Label>
+        <select
+          id="delivery-area"
+          value={value.deliveryAreaId}
+          onChange={(e) => handleAreaChange(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <Marker position={markerPos} draggable onDragEnd={handleMarkerDragEnd} />
-        </GoogleMap>
+          <option value="">Select a delivery area…</option>
+          {areas.map((area) => (
+            <option key={area.id} value={area.id}>
+              {area.name}
+            </option>
+          ))}
+        </select>
+        {areas.length === 0 && (
+          <p className="text-sm text-destructive">
+            No delivery areas are currently available. Please contact us for assistance.
+          </p>
+        )}
       </div>
 
-      <AddressFormFields fields={fields} onChange={handleFieldChange} />
+      <div className="space-y-2">
+        <Label htmlFor="street-detail">House / Block / Street Detail</Label>
+        <Input
+          id="street-detail"
+          type="text"
+          placeholder="e.g. Block 5, Flat 12A"
+          value={value.street}
+          onChange={(e) => handleStreetChange(e.target.value)}
+        />
+      </div>
     </div>
   );
 }

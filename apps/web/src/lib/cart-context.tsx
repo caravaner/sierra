@@ -53,12 +53,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = status === "authenticated";
   const prevAuth = useRef(false);
 
-  // Lazy-initialize from localStorage to avoid overwriting items before they're loaded
-  const [localItems, setLocalItems] = useState<CartItem[]>(readLocalCart);
+  // Initialize empty to avoid server/client hydration mismatch (localStorage is client-only)
+  const [localItems, setLocalItems] = useState<CartItem[]>([]);
+  const loadedRef = useRef(false);
 
-  // Persist local cart changes
+  // Load from localStorage after mount
   useEffect(() => {
-    if (!isAuthenticated) {
+    setLocalItems(readLocalCart());
+    loadedRef.current = true;
+  }, []);
+
+  // Persist local cart changes (skip initial render before localStorage is loaded)
+  useEffect(() => {
+    if (!isAuthenticated && loadedRef.current) {
       writeLocalCart(localItems);
     }
   }, [localItems, isAuthenticated]);
