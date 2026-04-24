@@ -1,10 +1,11 @@
 import { auth } from "@sierra/auth/edge";
 import { NextResponse } from "next/server";
 import type { NextMiddleware } from "next/server";
+import type { NextAuthRequest } from "next-auth";
 
 const protectedRoutes = ["/orders", "/checkout"];
 
-const middleware: NextMiddleware = auth((req) => {
+const middleware: NextMiddleware = auth((req: NextAuthRequest) => {
   const { pathname } = req.nextUrl;
   const isProtected = protectedRoutes.some((route) =>
     pathname.startsWith(route),

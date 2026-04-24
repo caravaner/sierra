@@ -6,10 +6,18 @@ import { APP_NAME } from "@sierra/shared";
 
 export default async function HomePage() {
   const caller = await api();
-  const [productData, brands] = await Promise.all([
-    caller.product.list({ limit: 20, offset: 0 }),
-    caller.brand.list(),
-  ]);
+  let productData: Awaited<ReturnType<typeof caller.product.list>> = { items: [], total: 0 };
+  let brands: Awaited<ReturnType<typeof caller.brand.list>> = [];
+  let catalogUnavailable = false;
+  try {
+    [productData, brands] = await Promise.all([
+      caller.product.list({ limit: 20, offset: 0 }),
+      caller.brand.list(),
+    ]);
+  } catch (err) {
+    console.error("HomePage catalog fetch failed", err);
+    catalogUnavailable = true;
+  }
 
   return (
     <div>
@@ -72,13 +80,21 @@ export default async function HomePage() {
       <div id="products" className="mb-8 flex items-baseline justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">All Products</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {productData.items.length} product{productData.items.length !== 1 ? "s" : ""} available
-          </p>
+          {!catalogUnavailable && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {productData.items.length} product{productData.items.length !== 1 ? "s" : ""} available
+            </p>
+          )}
         </div>
       </div>
 
-      {productData.items.length === 0 ? (
+      {catalogUnavailable ? (
+        <div className="py-24 text-center">
+          <p className="text-muted-foreground">
+            We couldn&apos;t load products right now. Please refresh in a moment.
+          </p>
+        </div>
+      ) : productData.items.length === 0 ? (
         <div className="py-24 text-center">
           <p className="text-muted-foreground">No products available yet — check back soon.</p>
         </div>
