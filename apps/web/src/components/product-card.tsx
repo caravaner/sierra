@@ -55,9 +55,9 @@ export function ProductCard({ id, name, price, images, brand, productType, volum
         )}
 
         <Link href={`/products/${id}`} className="mb-auto">
-          <h2 className="line-clamp-2 font-semibold leading-snug tracking-tight hover:text-primary transition-colors">
+          <h3 className="line-clamp-2 font-semibold leading-snug tracking-tight hover:text-primary transition-colors">
             {name}
-          </h2>
+          </h3>
         </Link>
 
         <p className="mt-3 text-xl font-bold text-primary">{formatCurrency(price)}</p>

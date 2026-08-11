@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
 import { ProductCard } from "@/components/product-card";
@@ -5,11 +6,66 @@ import { formatPackSize } from "@sierra/shared";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+type BrandProduct = {
+  volumeMl: number | null;
+  productType: { name: string; slug: string } | null;
+};
+
+/**
+ * Describes what a brand actually sells, based on its live products — not every
+ * brand carries dispenser (18.9L) refills, so this must never be hardcoded.
+ * Returns e.g. "bottled water", "dispenser water", "bottled and dispenser water".
+ */
+function describeOffering(products: BrandProduct[]): string {
+  let hasDispenser = false;
+  let hasBottled = false;
+
+  for (const p of products) {
+    const type = `${p.productType?.slug ?? ""} ${p.productType?.name ?? ""}`.toLowerCase();
+    // Fall back to volume when a product has no type: dispenser refills are the
+    // only sizes that run into the litres (18.9L), bottles are 50cl–1.5L.
+    if (type.includes("dispenser") || (p.volumeMl !== null && p.volumeMl >= 5000)) {
+      hasDispenser = true;
+    } else {
+      hasBottled = true;
+    }
+  }
+
+  if (hasBottled && hasDispenser) return "bottled and dispenser water";
+  if (hasDispenser) return "dispenser water";
+  if (hasBottled) return "bottled water";
+  return "water";
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const caller = await api();
+  const brand = await caller.brand.bySlug({ slug: params.slug });
+
+  if (!brand) return {};
+
+  const offering = describeOffering(brand.products);
+
+  return {
+    title: `${brand.name} Water Delivery in Osapa, Lekki & Environs, Lagos`,
+    description:
+      brand.description ??
+      `Order ${brand.name} ${offering} for fast, same-day delivery in Osapa, Lekki and surrounding areas of Lagos. Shop via WhatsApp or online with WATA.`,
+    alternates: { canonical: `/brands/${brand.slug}` },
+  };
+}
+
 export default async function BrandPage({ params }: { params: { slug: string } }) {
   const caller = await api();
   const brand = await caller.brand.bySlug({ slug: params.slug });
 
   if (!brand) notFound();
+
+  const offering = describeOffering(brand.products);
+  const offeringLabel = offering.charAt(0).toUpperCase() + offering.slice(1);
 
   // Group products by product type name
   const grouped = new Map<string, typeof brand.products>();
@@ -47,8 +103,11 @@ export default async function BrandPage({ params }: { params: { slug: string } }
         )}
         <div>
           <h1 className="text-4xl font-bold tracking-tight">{brand.name}</h1>
+          <p className="mt-2 max-w-xl text-lg text-muted-foreground">
+            {offeringLabel} delivery in Osapa, Lekki &amp; environs, Lagos
+          </p>
           {brand.description && (
-            <p className="mt-2 max-w-xl text-muted-foreground">{brand.description}</p>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground">{brand.description}</p>
           )}
           <p className="mt-3 text-sm text-muted-foreground">
             {brand.products.length} product{brand.products.length !== 1 ? "s" : ""}

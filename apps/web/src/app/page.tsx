@@ -1,8 +1,37 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { APP_NAME } from "@sierra/shared";
+
+const SITE_URL = process.env.NEXT_PUBLIC_WEB_URL ?? "https://wata.ng";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+const localBusinessJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: APP_NAME,
+  alternateName: "WATA",
+  description:
+    "Fast, same-day bottled and refill or dispenser water delivery in Osapa, Lekki and environs, Lagos.",
+  url: SITE_URL,
+  image: `${SITE_URL}/icon-512x512.png`,
+  priceRange: "₦₦",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Lekki",
+    addressRegion: "Lagos",
+    addressCountry: "NG",
+  },
+  areaServed: ["Osapa London", "Lekki", "Lekki Phase 1", "Agungi", "Ikate", "Lagos"].map((name) => ({
+    "@type": "Place",
+    name,
+  })),
+};
 
 export default async function HomePage() {
   const caller = await api();
@@ -21,28 +50,65 @@ export default async function HomePage() {
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+      />
+
       {/* Hero */}
-      <div className="mb-16 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-10 py-20 text-center">
+      <div className="mb-6 rounded-3xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent px-6 py-14 text-center sm:px-10">
         <p className="mb-3 text-xs font-bold uppercase tracking-[0.2em] text-primary/70">
-          Fresh &amp; Pure
+          Same-Day Delivery in Lekki
         </p>
-        <h1 className="text-5xl font-bold tracking-tight md:text-6xl">
-          Water that&apos;s worth
-          <br />
-          <span className="text-primary">every drop.</span>
+        <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight md:text-5xl">
+          Fast &amp; Reliable Water Delivery in{" "}
+          <span className="text-primary">Osapa, Lekki &amp; Environs</span>, Lagos
         </h1>
-        <p className="mx-auto mt-5 max-w-md text-lg text-muted-foreground">
-          Premium still and sparkling water delivered fresh to your door.
+        <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+          We deliver bottled and refill water straight to your doorstep in Osapa, Lekki, and
+          surrounding areas.
         </p>
         <Button size="lg" className="mt-8 rounded-full px-8 text-base font-semibold" asChild>
           <a href="#products">Shop Now →</a>
         </Button>
       </div>
 
+      {/* Quick facts — keeps the brand, size and ordering keywords on the page
+          without a wall of copy in the hero. */}
+      <section className="mb-14 grid gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-3">
+        {[
+          {
+            label: "Trusted brands",
+            value: "Aquafina · CWAY · EVA · Nestle · Aquadana",
+          },
+          {
+            label: "Sizes available",
+            value: "50cl · 75cl · 18.9L dispenser",
+          },
+          {
+            label: "How to order",
+            value: "WhatsApp or online — same-day delivery",
+          },
+        ].map((fact) => (
+          <div key={fact.label} className="bg-background px-6 py-5 text-center sm:text-left">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+              {fact.label}
+            </p>
+            <p className="mt-1.5 text-sm font-medium leading-snug">{fact.value}</p>
+          </div>
+        ))}
+      </section>
+
       {/* Brand banners */}
       {brands.length > 0 && (
         <section className="mb-14">
-          <h2 className="mb-5 text-xl font-bold tracking-tight">Shop by Brand</h2>
+          <h2 className="mb-1 text-xl font-bold tracking-tight">
+            Shop Trusted Water Brands in Lekki
+          </h2>
+          <p className="mb-5 text-sm text-muted-foreground">
+            Aquafina, CWAY, EVA, Nestle, Aquadana and more — delivered same-day across Osapa, Lekki
+            and environs.
+          </p>
           <div className="flex gap-4 overflow-x-auto pb-2">
             {brands.map((brand) => (
               <Link
@@ -79,12 +145,15 @@ export default async function HomePage() {
       {/* Products */}
       <div id="products" className="mb-8 flex items-baseline justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">All Products</h2>
-          {!catalogUnavailable && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {productData.items.length} product{productData.items.length !== 1 ? "s" : ""} available
-            </p>
-          )}
+          <h2 className="text-2xl font-bold tracking-tight">
+            Bottled, Refill &amp; Dispenser Water for Delivery
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            50cl, 75cl and 18.9L dispenser water at competitive prices
+            {!catalogUnavailable &&
+              ` — ${productData.items.length} product${productData.items.length !== 1 ? "s" : ""} available`}
+            .
+          </p>
         </div>
       </div>
 
