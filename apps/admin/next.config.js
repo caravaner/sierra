@@ -4,9 +4,6 @@ const path = require("path");
 const nextConfig = {
   output: "standalone",
   experimental: {
-    // Keeps pino out of the RSC bundle and traced into standalone output.
-    // The webpack externals below are what actually fix dev — see the note there.
-    serverComponentsExternalPackages: ["pino", "pino-pretty", "thread-stream"],
     // Ensures shared workspace packages are included in the standalone bundle
     outputFileTracingRoot: path.join(__dirname, "../../"),
     outputFileTracingIncludes: {
@@ -17,15 +14,6 @@ const nextConfig = {
     },
   },
   transpilePackages: ["@sierra/api", "@sierra/auth", "@sierra/db", "@sierra/domain", "@sierra/logger", "@sierra/notifications", "@sierra/shared"],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // @sierra/logger is transpiled, which drags pino into the server bundle
-      // regardless of serverComponentsExternalPackages. Force it to stay a real
-      // require() so thread-stream can find pino/lib/worker.js on disk.
-      config.externals = [...config.externals, "pino", "pino-pretty", "thread-stream"];
-    }
-    return config;
-  },
 };
 
 module.exports = nextConfig;
