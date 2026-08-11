@@ -65,7 +65,7 @@ export default async function HomePage() {
           <span className="text-primary">Osapa, Lekki &amp; Environs</span>, Lagos
         </h1>
         <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
-          We deliver bottled and refill water straight to your doorstep in Osapa, Lekki, and
+          We deliver bottled and refill water straight to your doorstep in Osapa, Lekki and
           surrounding areas.
         </p>
         <Button size="lg" className="mt-8 rounded-full px-8 text-base font-semibold" asChild>
